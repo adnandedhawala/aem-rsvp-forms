@@ -2,7 +2,7 @@ import mongoose, { type Model, model, Schema } from "mongoose";
 
 export interface IRsvpEntry {
 	rsvp: string;
-	kind: "member" | "household" | "control";
+	kind: "member" | "household" | "control" | "viewer";
 	file_id: string;
 	tanzeem_file_no: number;
 	member_id: string | null;
@@ -21,7 +21,7 @@ export const rsvpEntrySchema = new Schema<IRsvpEntry>(
 		rsvp: { type: String, required: true },
 		kind: {
 			type: String,
-			enum: ["member", "household", "control"],
+			enum: ["member", "household", "control", "viewer"],
 			required: true,
 		},
 		file_id: { type: String, required: true },

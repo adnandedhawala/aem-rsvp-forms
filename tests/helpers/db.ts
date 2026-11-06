@@ -107,6 +107,13 @@ export async function seedBasic(): Promise<void> {
 			userRole: ["Masool"],
 			name: "Masool One",
 		},
+		{
+			itsId: 30000003,
+			email: "viewer@test.local",
+			password: "secret",
+			userRole: ["User"],
+			name: "Viewer One",
+		},
 	]);
 }
 

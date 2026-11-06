@@ -133,3 +133,53 @@ test("admin closes and reopens an RSVP", async ({ page }) => {
 	const again = await page.request.get("/api/v1/rsvp/sample-rsvp");
 	expect((await again.json()).status).toBe("open");
 });
+
+test("viewer can see and download but not change", async ({
+	page,
+	browser,
+}) => {
+	await page.goto("/admin/login");
+	await page.getByLabel("ITS or email").fill("30000001");
+	await page.getByLabel("Password").fill("secret");
+	await page.getByRole("button", { name: "Sign in" }).click();
+	await page.getByRole("link", { name: "Viewers" }).click();
+	await page.getByLabel("Viewer ITS").fill("30000003");
+	await page.getByRole("button", { name: "Add viewer" }).click();
+	await expect(page.getByRole("cell", { name: "Viewer One" })).toBeVisible();
+
+	// A separate context: the viewer's own session
+	const ctx = await browser.newContext({ baseURL: new URL(page.url()).origin });
+	const v = await ctx.newPage();
+	await v.goto("/admin/login");
+	await v.getByLabel("ITS or email").fill("viewer@test.local");
+	await v.getByLabel("Password").fill("secret");
+	await v.getByRole("button", { name: "Sign in" }).click();
+	await expect(v.getByText("View only")).toBeVisible();
+	const row = v.getByRole("row").filter({ hasText: "Sample RSVP" });
+	await expect(row.getByRole("link", { name: "Responses" })).toBeVisible();
+	await expect(row.getByRole("button", { name: "Close" })).toHaveCount(0);
+	await expect(v.getByRole("link", { name: "Viewers" })).toHaveCount(0);
+
+	await v.goto("/admin/r/sample-rsvp/responses");
+	await expect(v.getByRole("button", { name: "Download Excel" })).toBeVisible();
+	await expect(v.getByRole("link", { name: "Open form" })).toHaveCount(0);
+	await v.goto("/admin/r/sample-rsvp/invitees");
+	await expect(v.getByRole("button", { name: "Download Excel" })).toBeVisible();
+	await expect(v.getByText("Add invitees")).toHaveCount(0);
+
+	const res = await v.request.post("/api/v1/admin/rsvp/sample-rsvp/close", {
+		data: { closed: true },
+	});
+	expect(res.status()).toBe(403);
+
+	// Removed viewers lose access straight away
+	await page.getByRole("button", { name: "Remove" }).click();
+	await page
+		.getByRole("dialog")
+		.getByRole("button", { name: "Remove" })
+		.click();
+	await expect(page.getByText("Viewer removed")).toBeVisible();
+	const after = await v.request.get("/api/v1/admin/rsvp");
+	expect(after.status()).toBe(401);
+	await ctx.close();
+});

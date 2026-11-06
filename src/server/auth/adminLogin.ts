@@ -1,6 +1,7 @@
 import "server-only";
 import { HttpError } from "../http";
 import { User } from "../models";
+import { isViewer } from "../services/viewers";
 import type { AdminClaims } from "./tokens";
 
 const escapeRegex = (s: string) => s.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
@@ -17,7 +18,9 @@ export async function loginAdmin(input: {
 			}).lean();
 	if (!user || user.password !== input.password)
 		throw new HttpError(401, "Invalid credentials");
-	if (!user.userRole?.includes("Admin" as never))
-		throw new HttpError(403, "Not an admin");
-	return { itsId: user.itsId, name: user.name };
+	if (user.userRole?.includes("Admin" as never))
+		return { itsId: user.itsId, name: user.name, role: "admin" };
+	if (await isViewer(String(user.itsId)))
+		return { itsId: user.itsId, name: user.name, role: "viewer" };
+	throw new HttpError(403, "Not an admin");
 }

@@ -1,4 +1,4 @@
-import { requireAdmin } from "@/server/auth/session";
+import { requireAdmin, requireStaff } from "@/server/auth/session";
 import { HttpError, json, withRoute } from "@/server/http";
 import { formOr404, readPayload } from "@/server/routeHelpers";
 import {
@@ -18,7 +18,7 @@ function parseFileNo(raw: string): number {
 }
 
 export const GET = withRoute(async (req, ctx: Ctx) => {
-	await requireAdmin(req);
+	await requireStaff(req);
 	const { slug, fileNo } = await ctx.params;
 	const form = formOr404(slug);
 	return json(

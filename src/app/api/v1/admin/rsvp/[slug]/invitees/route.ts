@@ -1,5 +1,5 @@
 import { z } from "zod";
-import { requireAdmin } from "@/server/auth/session";
+import { requireAdmin, requireStaff } from "@/server/auth/session";
 import { HttpError, json, withRoute } from "@/server/http";
 import { formOr404 } from "@/server/routeHelpers";
 import {
@@ -17,7 +17,7 @@ type Ctx = { params: Promise<{ slug: string }> };
 const Ids = z.object({ memberIds: z.array(z.string()) });
 
 export const GET = withRoute(async (req, ctx: Ctx) => {
-	await requireAdmin(req);
+	await requireStaff(req);
 	const { slug } = await ctx.params;
 	formOr404(slug);
 	return json({ rows: await listInvitees(slug) });

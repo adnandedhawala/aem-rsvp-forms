@@ -4,7 +4,7 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { Alert, App, Button, Table, Tag, Tooltip } from "antd";
 import dayjs from "dayjs";
 import Link from "next/link";
-import { AdminShell } from "@/components/admin/AdminShell";
+import { AdminShell, useIsAdmin } from "@/components/admin/AdminShell";
 import { api } from "@/lib/api";
 import type { FormStats } from "@/server/services/responses";
 
@@ -13,6 +13,7 @@ const fmt = (iso: string) => dayjs(iso).format("DD MMM YYYY, HH:mm");
 
 export function RsvpListClient() {
 	const { message, modal } = App.useApp();
+	const isAdmin = useIsAdmin();
 	const qc = useQueryClient();
 	const q = useQuery({
 		queryKey: ["admin-rsvps"],
@@ -89,13 +90,15 @@ export function RsvpListClient() {
 								<Link prefetch={false} href={`/admin/r/${r.slug}/responses`}>
 									Responses
 								</Link>
-								<Button
-									size="small"
-									danger={!r.adminClosed}
-									onClick={() => confirmToggle(r)}
-								>
-									{r.adminClosed ? "Reopen" : "Close"}
-								</Button>
+								{isAdmin && (
+									<Button
+										size="small"
+										danger={!r.adminClosed}
+										onClick={() => confirmToggle(r)}
+									>
+										{r.adminClosed ? "Reopen" : "Close"}
+									</Button>
+								)}
 							</span>
 						),
 					},

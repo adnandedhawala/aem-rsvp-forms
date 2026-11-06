@@ -6,7 +6,7 @@ import type { ColDef, GridApi, GridReadyEvent } from "ag-grid-community";
 import { App, Button, Input, Space, Upload } from "antd";
 import dayjs from "dayjs";
 import { useCallback, useEffect, useMemo, useState } from "react";
-import { AdminShell } from "@/components/admin/AdminShell";
+import { AdminShell, useIsAdmin } from "@/components/admin/AdminShell";
 import { DataGrid } from "@/components/admin/DataGrid";
 import { ApiError, api } from "@/lib/api";
 import { parseInviteeSheet } from "@/lib/inviteeSheet";
@@ -38,6 +38,7 @@ function statusOf(row: GridRow): string {
 
 export function InviteesClient({ slug }: { slug: string }) {
 	const { message, modal } = App.useApp();
+	const isAdmin = useIsAdmin();
 	const qc = useQueryClient();
 	const form = getForm(slug);
 	const title = form?.title ?? slug;
@@ -234,66 +235,68 @@ export function InviteesClient({ slug }: { slug: string }) {
 			title={`Invitees: ${title}`}
 			breadcrumbs={[{ label: "RSVPs", href: "/admin" }, { label: title }]}
 		>
-			<section className="mb-6 flex flex-col gap-2">
-				<h2 className="m-0 text-base font-semibold">Add invitees</h2>
-				<Space wrap>
-					<Button onClick={() => setRows((rs) => [...rs, ...blanks(100)])}>
-						Add 100 rows
-					</Button>
-					<Upload
-						accept=".xlsx,.xls,.csv"
-						showUploadList={false}
-						beforeUpload={upload}
-					>
-						<Button>Upload Excel/CSV</Button>
-					</Upload>
-					<Button
-						onClick={() => {
-							setRows(blanks(100));
-						}}
-					>
-						Clear
-					</Button>
-					<Button
-						disabled={filled.length === 0}
-						loading={check.isPending}
-						onClick={() => {
-							// Drop completely empty rows so the grid holds only real entries
-							setRows(filled);
-							check.mutate(filled);
-						}}
-					>
-						Check rows
-					</Button>
-					<Button
-						type="primary"
-						disabled={!canSave}
-						loading={save.isPending}
-						onClick={() => save.mutate()}
-					>
-						Save
-					</Button>
-				</Space>
-				<div style={{ height: 400 }}>
-					<DataGrid<GridRow>
-						rowData={rows}
-						columnDefs={addCols}
-						getRowId={(p) => p.data.id}
-						cellSelection
-						stopEditingWhenCellsLoseFocus
-						rowClassRules={{
-							"bg-red-50": (p) => !!p.data?.check && !p.data.check.ok,
-						}}
-						onCellValueChanged={(e) => {
-							if (e.data && e.colDef.field) {
-								edit(e.data.id, {
-									[e.colDef.field]: String(e.newValue ?? "").trim(),
-								});
-							}
-						}}
-					/>
-				</div>
-			</section>
+			{isAdmin && (
+				<section className="mb-6 flex flex-col gap-2">
+					<h2 className="m-0 text-base font-semibold">Add invitees</h2>
+					<Space wrap>
+						<Button onClick={() => setRows((rs) => [...rs, ...blanks(100)])}>
+							Add 100 rows
+						</Button>
+						<Upload
+							accept=".xlsx,.xls,.csv"
+							showUploadList={false}
+							beforeUpload={upload}
+						>
+							<Button>Upload Excel/CSV</Button>
+						</Upload>
+						<Button
+							onClick={() => {
+								setRows(blanks(100));
+							}}
+						>
+							Clear
+						</Button>
+						<Button
+							disabled={filled.length === 0}
+							loading={check.isPending}
+							onClick={() => {
+								// Drop completely empty rows so the grid holds only real entries
+								setRows(filled);
+								check.mutate(filled);
+							}}
+						>
+							Check rows
+						</Button>
+						<Button
+							type="primary"
+							disabled={!canSave}
+							loading={save.isPending}
+							onClick={() => save.mutate()}
+						>
+							Save
+						</Button>
+					</Space>
+					<div style={{ height: 400 }}>
+						<DataGrid<GridRow>
+							rowData={rows}
+							columnDefs={addCols}
+							getRowId={(p) => p.data.id}
+							cellSelection
+							stopEditingWhenCellsLoseFocus
+							rowClassRules={{
+								"bg-red-50": (p) => !!p.data?.check && !p.data.check.ok,
+							}}
+							onCellValueChanged={(e) => {
+								if (e.data && e.colDef.field) {
+									edit(e.data.id, {
+										[e.colDef.field]: String(e.newValue ?? "").trim(),
+									});
+								}
+							}}
+						/>
+					</div>
+				</section>
+			)}
 
 			<section className="flex flex-col gap-2">
 				<h2 className="m-0 text-base font-semibold">
@@ -306,13 +309,15 @@ export function InviteesClient({ slug }: { slug: string }) {
 						style={{ width: 240 }}
 						onChange={(e) => setSearch(e.target.value)}
 					/>
-					<Button
-						danger
-						disabled={selected.length === 0}
-						onClick={confirmRemove}
-					>
-						Remove selected
-					</Button>
+					{isAdmin && (
+						<Button
+							danger
+							disabled={selected.length === 0}
+							onClick={confirmRemove}
+						>
+							Remove selected
+						</Button>
+					)}
 					<Button
 						onClick={() =>
 							listApi?.exportDataAsExcel({ fileName: `${slug}-invitees.xlsx` })
@@ -326,7 +331,7 @@ export function InviteesClient({ slug }: { slug: string }) {
 						rowData={list.data?.rows ?? []}
 						columnDefs={listCols}
 						loading={list.isPending}
-						rowSelection={{ mode: "multiRow" }}
+						rowSelection={isAdmin ? { mode: "multiRow" } : undefined}
 						quickFilterText={search}
 						getRowId={(p) => p.data.its}
 						onGridReady={(e: GridReadyEvent<InviteeListRow>) =>

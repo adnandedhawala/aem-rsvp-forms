@@ -30,7 +30,7 @@ describe("proxy", () => {
 		expect(res.status).toBe(200);
 	});
 	it("lets /admin through with a valid admin cookie", async () => {
-		const token = await signAdminToken({ itsId: 1, name: "A" });
+		const token = await signAdminToken({ itsId: 1, name: "A", role: "admin" });
 		const res = await proxy(
 			new NextRequest("http://x/admin", {
 				headers: { cookie: `rsvp_admin=${token}` },

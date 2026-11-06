@@ -1,58 +1,14 @@
 "use client";
 
-import { type Answers, type FieldDef, isFieldVisible } from "@forms/_fields";
 import { getForm } from "@forms/index";
 import { useQuery } from "@tanstack/react-query";
-import { Alert, Card } from "antd";
+import { Alert } from "antd";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useEffect } from "react";
+import { AnswerSummary } from "@/components/form/AnswerSummary";
 import { ApiError, api } from "@/lib/api";
 import type { HouseholdView } from "@/server/services/households";
-
-function display(f: FieldDef, v: unknown): string {
-	if (f.type === "checkbox") return v === true ? "Yes" : "No";
-	if (Array.isArray(v)) return v.join(", ");
-	return String(v);
-}
-
-function Summary({
-	title,
-	fields,
-	data,
-}: {
-	title: string;
-	fields: FieldDef[];
-	data: Answers | null;
-}) {
-	const rows = fields.filter(
-		(f) =>
-			isFieldVisible(f, data ?? {}) &&
-			data?.[f.name] !== undefined &&
-			data[f.name] !== "",
-	);
-	return (
-		<Card className="mb-3" title={title} size="small">
-			{rows.length === 0 ? (
-				<span className="text-zinc-500">No answers</span>
-			) : (
-				<dl className="m-0">
-					{rows.map((f) => (
-						<div
-							key={f.name}
-							className="flex justify-between gap-4 py-1 text-sm"
-						>
-							<dt className="text-zinc-600">{f.label}</dt>
-							<dd className="m-0 text-right font-medium">
-								{display(f, data?.[f.name])}
-							</dd>
-						</div>
-					))}
-				</dl>
-			)}
-		</Card>
-	);
-}
 
 export function DoneClient({ slug }: { slug: string }) {
 	const router = useRouter();
@@ -81,14 +37,14 @@ export function DoneClient({ slug }: { slug: string }) {
 						message="Thank you, your answers are saved"
 					/>
 					{v.household && form.householdFields.length > 0 && (
-						<Summary
+						<AnswerSummary
 							title="Household"
 							fields={form.householdFields}
 							data={v.household.data}
 						/>
 					)}
 					{v.members.map((m) => (
-						<Summary
+						<AnswerSummary
 							key={m.its}
 							title={m.full_name}
 							fields={form.memberFields}

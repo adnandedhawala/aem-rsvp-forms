@@ -6,7 +6,8 @@ import { Alert, App } from "antd";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
-import { AdminShell } from "@/components/admin/AdminShell";
+import { AdminShell, useIsAdmin } from "@/components/admin/AdminShell";
+import { AnswerSummary } from "@/components/form/AnswerSummary";
 import { HouseholdForm } from "@/components/form/HouseholdForm";
 import { ApiError, api } from "@/lib/api";
 import type {
@@ -28,7 +29,9 @@ export function AdminHouseholdClient({
 }) {
 	const router = useRouter();
 	const { message } = App.useApp();
-	const title = getForm(slug)?.title ?? slug;
+	const isAdmin = useIsAdmin();
+	const form = getForm(slug);
+	const title = form?.title ?? slug;
 	const path = `/api/v1/admin/rsvp/${slug}/household/${fileNo}`;
 	const view = useQuery({
 		queryKey: ["admin-household", slug, fileNo],
@@ -73,7 +76,26 @@ export function AdminHouseholdClient({
 						}
 					/>
 				)}
-				{v && (
+				{v && !isAdmin && form && (
+					<>
+						{v.household && form.householdFields.length > 0 && (
+							<AnswerSummary
+								title="Household"
+								fields={form.householdFields}
+								data={v.household.data}
+							/>
+						)}
+						{v.members.map((m) => (
+							<AnswerSummary
+								key={m.its}
+								title={m.full_name}
+								fields={form.memberFields}
+								data={m.data}
+							/>
+						))}
+					</>
+				)}
+				{v && isAdmin && (
 					<HouseholdForm
 						formSlug={slug}
 						view={v}

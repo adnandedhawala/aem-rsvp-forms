@@ -1,5 +1,6 @@
 import "server-only";
 import { HttpError } from "../http";
+import { isViewer } from "../services/viewers";
 import {
 	ADMIN_COOKIE,
 	type AdminClaims,
@@ -20,9 +21,20 @@ function readCookie(req: Request, name: string): string | undefined {
 	return undefined;
 }
 
-export async function requireAdmin(req: Request): Promise<AdminClaims> {
+/** An admin, or a viewer who is still on the viewers list. For read routes. */
+export async function requireStaff(req: Request): Promise<AdminClaims> {
 	const claims = await verifyAdminToken(readCookie(req, ADMIN_COOKIE));
 	if (!claims) throw new HttpError(401, "Not signed in");
+	// Checked on every request so a removed viewer is locked out straight away
+	if (claims.role === "viewer" && !(await isViewer(String(claims.itsId))))
+		throw new HttpError(401, "Not signed in");
+	return claims;
+}
+
+/** Admins only. For every route that changes data. */
+export async function requireAdmin(req: Request): Promise<AdminClaims> {
+	const claims = await requireStaff(req);
+	if (claims.role !== "admin") throw new HttpError(403, "View-only access");
 	return claims;
 }
 

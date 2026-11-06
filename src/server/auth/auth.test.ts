@@ -48,7 +48,7 @@ const reqWith = (cookie?: string) =>
 
 describe("loginAdmin", () => {
 	it("accepts an ITS or a case-insensitive email", async () => {
-		const expected = { itsId: 30000001, name: "Admin One" };
+		const expected = { itsId: 30000001, name: "Admin One", role: "admin" };
 		expect(
 			await loginAdmin({ identifier: "30000001", password: "secret" }),
 		).toEqual(expected);
@@ -73,8 +73,10 @@ describe("loginAdmin", () => {
 
 describe("tokens", () => {
 	it("round-trips admin claims and keeps audiences apart", async () => {
-		const c = { itsId: 30000001, name: "Admin One" };
+		const c = { itsId: 30000001, name: "Admin One", role: "admin" as const };
 		expect(await verifyAdminToken(await signAdminToken(c))).toEqual(c);
+		const v = { ...c, role: "viewer" as const };
+		expect(await verifyAdminToken(await signAdminToken(v))).toEqual(v);
 		expect(await verifyAdminToken(await signHouseholdToken(hh))).toBeNull();
 		expect(await verifyHouseholdToken(await signAdminToken(c))).toBeNull();
 		expect(await verifyAdminToken("garbage")).toBeNull();
@@ -94,7 +96,7 @@ describe("sessions", () => {
 		await expect(requireAdmin(reqWith())).rejects.toMatchObject({
 			status: 401,
 		});
-		const c = { itsId: 1, name: "A" };
+		const c = { itsId: 1, name: "A", role: "admin" as const };
 		const req = reqWith(`other=1; rsvp_admin=${await signAdminToken(c)}`);
 		await expect(requireAdmin(req)).resolves.toEqual(c);
 	});

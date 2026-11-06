@@ -1,11 +1,26 @@
 "use client";
 
 import { useMutation, useQuery } from "@tanstack/react-query";
-import { Breadcrumb, Button } from "antd";
+import { Breadcrumb, Button, Tag } from "antd";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { type ReactNode, useEffect } from "react";
 import { ApiError, api } from "@/lib/api";
+
+type Me = { itsId: number; name: string; role: "admin" | "viewer" };
+
+const meQuery = {
+	queryKey: ["admin-me"],
+	queryFn: () => api<Me>("/api/v1/admin/verify"),
+};
+
+/**
+ * True only once the signed-in user is known to be an admin, so edit controls
+ * stay hidden for viewers and while loading. The API enforces it as well.
+ */
+export function useIsAdmin(): boolean {
+	return useQuery(meQuery).data?.role === "admin";
+}
 
 export function AdminShell(props: {
 	title: string;
@@ -14,10 +29,7 @@ export function AdminShell(props: {
 	children: ReactNode;
 }) {
 	const router = useRouter();
-	const me = useQuery({
-		queryKey: ["admin-me"],
-		queryFn: () => api<{ itsId: number; name: string }>("/api/v1/admin/verify"),
-	});
+	const me = useQuery(meQuery);
 	const logout = useMutation({
 		mutationFn: () => api("/api/v1/admin/logout", { method: "POST" }),
 		onSuccess: () => router.replace("/admin/login"),
@@ -38,7 +50,17 @@ export function AdminShell(props: {
 					AEM RSVP Admin
 				</Link>
 				<div className="flex items-center gap-3 text-sm">
+					{me.data?.role === "admin" && (
+						<Link
+							prefetch={false}
+							href="/admin/viewers"
+							className="text-white underline"
+						>
+							Viewers
+						</Link>
+					)}
 					{me.data && <span>{me.data.name}</span>}
+					{me.data?.role === "viewer" && <Tag color="gold">View only</Tag>}
 					<Button
 						size="small"
 						loading={logout.isPending}

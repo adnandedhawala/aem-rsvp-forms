@@ -8,7 +8,7 @@ import { Alert, Button, Card, Input, Space, Switch, Table } from "antd";
 import dayjs from "dayjs";
 import Link from "next/link";
 import { useMemo, useState } from "react";
-import { AdminShell } from "@/components/admin/AdminShell";
+import { AdminShell, useIsAdmin } from "@/components/admin/AdminShell";
 import { DataGrid } from "@/components/admin/DataGrid";
 import { api } from "@/lib/api";
 import { summarise } from "@/lib/summary";
@@ -30,6 +30,7 @@ const when = (iso: string | null) =>
 
 export function ResponsesClient({ slug }: { slug: string }) {
 	const title = getForm(slug)?.title ?? slug;
+	const isAdmin = useIsAdmin();
 	const q = useQuery({
 		queryKey: ["responses", slug],
 		queryFn: () => api<Payload>(`/api/v1/admin/rsvp/${slug}/responses`),
@@ -105,12 +106,12 @@ export function ResponsesClient({ slug }: { slug: string }) {
 							prefetch={false}
 							href={`/admin/r/${slug}/household/${p.data.fileNo}`}
 						>
-							Open form
+							{isAdmin ? "Open form" : "View"}
 						</Link>
 					) : null,
 			},
 		];
-	}, [fields, perFile, slug]);
+	}, [fields, perFile, slug, isAdmin]);
 
 	const summary = fields ? summarise(rows, fields.member) : [];
 	const answeredMembers = rows.filter((r) => r.status === "Answered").length;

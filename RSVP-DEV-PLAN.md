@@ -51,7 +51,7 @@ These come from the spec. Every plan's requirements include them, so they aren't
 - **DB guard rails** (spec 2b). `MONGODB_DBNAME` must be `aem-dev` or `aem-prod`. `aem-prod` is allowed only when `VERCEL_ENV === "production"`. Scripts that write test data refuse anything but `aem-dev`.
 - **Server-only env:** `MONGODB_URI`, `MONGODB_DBNAME` and `JWT_SECRET` never get a `NEXT_PUBLIC_` prefix. The only public variable is the optional `NEXT_PUBLIC_AG_GRID_LICENSE`.
 - **Models:** the existing AEM models (`member`, `file`, `sector`, `subsector`, `user`) are copied from `aem-shared` and only read. **The only new collection is `rsvp_entry`.**
-- **Admin** means a `user` whose `userRole` includes `"Admin"`. Passwords are compared as plain text, as `aem-auth` does.
+- **Admin** means a `user` whose `userRole` includes `"Admin"`. A **viewer** (6-05) is a `user` an admin added on `/admin/viewers`: read routes use `requireStaff`, every write uses `requireAdmin`. Passwords are compared as plain text, as `aem-auth` does.
 - **Invites:** one invited row is one member. The household form shows every non-removed invited member of the file.
 - **Fields:** a field's `name` is its key in the stored answers, and names are unique across `householdFields` and `memberFields`.
 - **Saving:** one Submit per household, saved in one MongoDB transaction, all or nothing. Admins can save any household, even after the RSVP closes (`submitted_via: "admin"`).
@@ -128,6 +128,7 @@ Each row is one plan in `docs/plans/`. Sizes are relative (S, M, L), not time es
 | 6-02 | `invitees-page` | M | `parseInviteeSheet`, invitee grid (paste / upload / check / save), invited list with remove + Excel download | Built |
 | 6-03 | `responses-page` | M | Responses grid with counts, filters, per-file view, Excel export; admin household edit page | Built |
 | 6-04 | `close-switch` | S | Admin Close / Reopen on `/admin` (`kind: "control"` row in `rsvp_entry`), server-side `rsvpStatus` | Built |
+| 6-05 | `view-only-access` | M | Viewers added by admins (`kind: "viewer"` rows), `requireStaff` for reads, read-only admin pages | Built |
 
 **Unblocks:** the whole app works on `aem-dev` end to end.
 

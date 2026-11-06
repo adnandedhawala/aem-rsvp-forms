@@ -7,7 +7,8 @@ export const HOUSEHOLD_COOKIE = "rsvp_household";
 export const ADMIN_MAX_AGE = 12 * 60 * 60;
 export const HOUSEHOLD_MAX_AGE = 30 * 60;
 
-export type AdminClaims = { itsId: number; name: string };
+export type AdminRole = "admin" | "viewer";
+export type AdminClaims = { itsId: number; name: string; role: AdminRole };
 export type HouseholdClaims = {
 	slug: string;
 	fileId: string;
@@ -52,7 +53,9 @@ export async function verifyAdminToken(
 	const p = await verify(token, "admin");
 	if (!p || typeof p.itsId !== "number" || typeof p.name !== "string")
 		return null;
-	return { itsId: p.itsId, name: p.name };
+	// Tokens from before roles were only ever issued to admins
+	const role: AdminRole = p.role === "viewer" ? "viewer" : "admin";
+	return { itsId: p.itsId, name: p.name, role };
 }
 
 export async function verifyHouseholdToken(

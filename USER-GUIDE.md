@@ -83,6 +83,15 @@ On the responses page, click **Open form** on a row. This opens the same form th
 - Admins can save **even after the RSVP has closed**.
 - These entries are marked as submitted by the admin, so you can tell them apart.
 
+### 7. Give someone view-only access
+
+Click **Viewers** in the top bar (admins only). Type the person's ITS and click **Add viewer**. They must already be a user in AEM.
+
+- Viewers sign in on the same admin login, with their usual AEM ITS or email and password. The top bar shows **View only**.
+- They can see every RSVP's list, invitees and responses, and download them as Excel. **View** on a response row shows that household's answers.
+- They can't invite or remove people, change answers, or close or reopen an RSVP.
+- Click **Remove** to take access away. It stops on their next page load.
+
 ---
 
 ## Part 2: Household guide (for members)
@@ -125,6 +134,8 @@ Your sign-in lasts about 30 minutes. If it expires, sign in again. Your saved an
 | Admin | `/admin` | List of RSVPs |
 | Admin | `/admin/r/<slug>/invitees` | Add or remove invited members |
 | Admin | `/admin/r/<slug>/responses` | View, filter, export, edit responses |
+| Admin | `/admin/viewers` | Add or remove view-only users |
+| Viewer | `/admin` and the pages under it | See and download, nothing else |
 | Household | `/r/<slug>` | Sign in with file no + ITS |
 | Household | `/r/<slug>/form` | Fill in for all invited members |
 
