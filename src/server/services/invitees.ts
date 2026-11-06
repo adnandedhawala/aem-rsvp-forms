@@ -1,0 +1,226 @@
+import "server-only";
+import { HttpError } from "../http";
+import { File, Member, RsvpEntry } from "../models";
+
+const MAX_ROWS = 5000;
+
+export interface InviteeRowInput {
+	fileNo: string;
+	its: string;
+}
+
+export interface InviteeRowResult extends InviteeRowInput {
+	ok: boolean;
+	error?: string;
+	full_name?: string;
+	age?: number;
+	gender?: string;
+	hofName?: string;
+	sector?: string;
+	subsector?: string;
+	alreadyInvited?: boolean;
+}
+
+export interface InviteeListRow {
+	its: string;
+	fileNo: number;
+	full_name: string;
+	hofName: string;
+	sector: string | null;
+	subsector: string | null;
+	answered: boolean;
+	createdAt: string;
+}
+
+function cleanRows(rows: InviteeRowInput[]): InviteeRowInput[] {
+	if (rows.length > MAX_ROWS)
+		throw new HttpError(400, `At most ${MAX_ROWS} rows at a time`);
+	return rows
+		.map((r) => ({
+			fileNo: String(r.fileNo ?? "").trim(),
+			its: String(r.its ?? "").trim(),
+		}))
+		.filter((r) => r.fileNo !== "" || r.its !== "");
+}
+
+export async function validateInviteeRows(
+	slug: string,
+	rawRows: InviteeRowInput[],
+): Promise<InviteeRowResult[]> {
+	const rows = cleanRows(rawRows);
+	const fileNos = [
+		...new Set(
+			rows.filter((r) => /^\d+$/.test(r.fileNo)).map((r) => Number(r.fileNo)),
+		),
+	];
+	const itsList = [
+		...new Set(rows.filter((r) => /^\d{8}$/.test(r.its)).map((r) => r.its)),
+	];
+	const [files, members, entries] = await Promise.all([
+		File.find({ tanzeem_file_no: { $in: fileNos } }).lean(),
+		Member.find({ _id: { $in: itsList } }).lean(),
+		RsvpEntry.find({
+			rsvp: slug,
+			kind: "member",
+			member_id: { $in: itsList },
+			is_removed: false,
+		})
+			.select("member_id")
+			.lean(),
+	]);
+	const fileByNo = new Map(files.map((f) => [f.tanzeem_file_no, f]));
+	const memberById = new Map(members.map((m) => [m._id, m]));
+	const invited = new Set(entries.map((e) => e.member_id));
+	const seen = new Set<string>();
+
+	return rows.map((r): InviteeRowResult => {
+		const fail = (error: string): InviteeRowResult => ({
+			...r,
+			ok: false,
+			error,
+		});
+		if (!/^\d+$/.test(r.fileNo)) return fail("File no must be a number");
+		if (!/^\d{8}$/.test(r.its)) return fail("ITS must be 8 digits");
+		const file = fileByNo.get(Number(r.fileNo));
+		if (!file) return fail("File not found");
+		const member = memberById.get(r.its);
+		if (!member) return fail("ITS not found");
+		if (!(file.member_ids ?? []).includes(r.its))
+			return fail("ITS is not in this file");
+		if (seen.has(r.its)) return fail("Duplicate row");
+		seen.add(r.its);
+		return {
+			...r,
+			ok: true,
+			full_name: member.full_name,
+			age: member.age,
+			gender: member.gender,
+			hofName: file.hof_name,
+			sector: file.sub_sector?.sector?.name,
+			subsector: file.sub_sector?.name,
+			alreadyInvited: invited.has(r.its),
+		};
+	});
+}
+
+export async function addInvitees(
+	slug: string,
+	rawRows: InviteeRowInput[],
+	adminIts: string,
+): Promise<{ added: number; restored: number; unchanged: number }> {
+	const results = await validateInviteeRows(slug, rawRows);
+	if (results.some((r) => !r.ok))
+		throw new HttpError(422, "Some rows have errors", results);
+
+	const itsList = results.map((r) => r.its);
+	const files = await File.find({
+		tanzeem_file_no: { $in: results.map((r) => Number(r.fileNo)) },
+	}).lean();
+	const fileByNo = new Map(files.map((f) => [f.tanzeem_file_no, f]));
+	const existing = await RsvpEntry.find({
+		rsvp: slug,
+		kind: "member",
+		member_id: { $in: itsList },
+	})
+		.select("member_id is_removed")
+		.lean();
+	const existingById = new Map(existing.map((e) => [e.member_id, e]));
+
+	let added = 0;
+	let restored = 0;
+	let unchanged = 0;
+	const toInsert = [];
+	const toRestore: string[] = [];
+	for (const r of results) {
+		const e = existingById.get(r.its);
+		if (!e) {
+			const file = fileByNo.get(Number(r.fileNo));
+			if (!file) continue;
+			toInsert.push({
+				rsvp: slug,
+				kind: "member" as const,
+				file_id: file._id,
+				tanzeem_file_no: Number(r.fileNo),
+				member_id: r.its,
+				invited_by: adminIts,
+			});
+			added++;
+		} else if (e.is_removed) {
+			toRestore.push(r.its);
+			restored++;
+		} else {
+			unchanged++;
+		}
+	}
+	if (toInsert.length) await RsvpEntry.insertMany(toInsert);
+	if (toRestore.length) {
+		await RsvpEntry.updateMany(
+			{ rsvp: slug, kind: "member", member_id: { $in: toRestore } },
+			{ $set: { is_removed: false } },
+		);
+	}
+	return { added, restored, unchanged };
+}
+
+export async function removeInvitees(
+	slug: string,
+	memberIds: string[],
+): Promise<{ removed: number; hadAnswers: number }> {
+	const filter = {
+		rsvp: slug,
+		kind: "member" as const,
+		member_id: { $in: memberIds },
+		is_removed: false,
+	};
+	const hadAnswers = await RsvpEntry.countDocuments({
+		...filter,
+		data: { $ne: null },
+	});
+	const res = await RsvpEntry.updateMany(filter, {
+		$set: { is_removed: true },
+	});
+	return { removed: res.modifiedCount, hadAnswers };
+}
+
+export async function listInvitees(slug: string): Promise<InviteeListRow[]> {
+	const entries = await RsvpEntry.find({
+		rsvp: slug,
+		kind: "member",
+		is_removed: false,
+	}).lean();
+	const [files, members] = await Promise.all([
+		File.find({
+			_id: { $in: [...new Set(entries.map((e) => e.file_id))] },
+		}).lean(),
+		Member.find({ _id: { $in: entries.map((e) => e.member_id) } }).lean(),
+	]);
+	const fileById = new Map(files.map((f) => [f._id, f]));
+	const memberById = new Map(members.map((m) => [m._id, m]));
+
+	return entries
+		.map((e): InviteeListRow => {
+			const file = fileById.get(e.file_id);
+			const its = e.member_id as string;
+			return {
+				its,
+				fileNo: e.tanzeem_file_no,
+				full_name: memberById.get(its)?.full_name ?? its,
+				hofName: file?.hof_name ?? "",
+				sector: file?.sub_sector?.sector?.name ?? null,
+				subsector: file?.sub_sector?.name ?? null,
+				answered: e.data !== null && e.data !== undefined,
+				createdAt: new Date(e.createdAt).toISOString(),
+			};
+		})
+		.sort((a, b) => {
+			if (a.fileNo !== b.fileNo) return a.fileNo - b.fileNo;
+			const aHof =
+				fileById.get(entries.find((e) => e.member_id === a.its)?.file_id ?? "")
+					?._id === a.its;
+			const bHof =
+				fileById.get(entries.find((e) => e.member_id === b.its)?.file_id ?? "")
+					?._id === b.its;
+			if (aHof !== bHof) return aHof ? -1 : 1;
+			return a.its.localeCompare(b.its);
+		});
+}

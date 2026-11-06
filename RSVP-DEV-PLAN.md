@@ -107,7 +107,7 @@ Each row is one plan in `docs/plans/`. Sizes are relative (S, M, L), not time es
 
 | # | Plan | Size | What it gives | Status |
 |---|---|---|---|---|
-| 4-01 | `invitees-api` | M | Validate / add (merge) / remove / list invitees | Planned |
+| 4-01 | `invitees-api` | M | Validate / add (merge) / remove / list invitees | Built |
 | 4-02 | `responses-api` | M | `listResponses`, `getFormStats`, RSVP list + responses routes | Planned |
 
 ### Phase 5. Household pages
