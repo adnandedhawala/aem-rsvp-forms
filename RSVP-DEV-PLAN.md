@@ -134,7 +134,7 @@ Each row is one plan in `docs/plans/`. Sizes are relative (S, M, L), not time es
 
 | # | Plan | Size | What it gives | Status |
 |---|---|---|---|---|
-| 7-01 | `e2e` | M | Playwright on a memory DB: household flow, admin flow, `no-store` on every route | Planned |
+| 7-01 | `e2e` | M | Playwright on a memory DB: household flow, admin flow, `no-store` on every route | Built |
 | 7-02 | `deploy` | S | README, CI, Vercel env setup, `db:indexes` on both DBs, first production deploy | Planned |
 
 ---
