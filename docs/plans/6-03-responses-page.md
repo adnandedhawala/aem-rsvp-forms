@@ -1,6 +1,6 @@
 # 6-03 Responses page and admin household edit
 
-Status: Planned · 6 Nov 2026
+Status: Built · 6 Nov 2026
 Kind: new · Spec: 4.4 · Depends on: 3-02, 4-02, 5-02, 6-01
 
 ## Decide

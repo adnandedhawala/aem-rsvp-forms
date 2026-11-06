@@ -126,7 +126,7 @@ Each row is one plan in `docs/plans/`. Sizes are relative (S, M, L), not time es
 |---|---|---|---|---|
 | 6-01 | `admin-shell` | S | AG Grid setup, `AdminShell`, login page, RSVP list page | Built |
 | 6-02 | `invitees-page` | M | `parseInviteeSheet`, invitee grid (paste / upload / check / save), invited list with remove + Excel download | Built |
-| 6-03 | `responses-page` | M | Responses grid with counts, filters, per-file view, Excel export; admin household edit page | Planned |
+| 6-03 | `responses-page` | M | Responses grid with counts, filters, per-file view, Excel export; admin household edit page | Built |
 
 **Unblocks:** the whole app works on `aem-dev` end to end.
 
