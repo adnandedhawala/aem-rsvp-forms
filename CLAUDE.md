@@ -14,7 +14,7 @@ RSVP app for AEM. Each RSVP is a file in `forms/`. Admins invite members (file n
 - Never read, print or commit `.env.local`.
 - Only one new collection: `rsvp_entry`. The AEM models are read-only copies of `aem-shared`.
 
-## Commands (once `0-01` is built)
+## Commands
 
 ```bash
 npm run dev          # local, on aem-dev

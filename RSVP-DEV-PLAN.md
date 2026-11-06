@@ -13,11 +13,11 @@
 
 | Area | State |
 |---|---|
-| Code | None. Repo has `docs/` only |
-| Database | `aem-dev` and `aem-prod` exist (shared with `aem-map`). `rsvp_entry` not created yet |
-| Plans | All 18 written, none approved. Next: `0-01-scaffold` |
-| Tests | None |
-| Deploy | No Vercel project yet |
+| Code | Everything built (plans 0-01 to 7-01), not yet reviewed. Local only, not pushed |
+| Database | `aem-dev` and `aem-prod` exist (shared with `aem-map`). `rsvp_entry` indexes not created yet |
+| Plans | 7-02 README written; CI dropped (Vercel handles builds). Remaining: your Vercel setup and first deploy |
+| Tests | 75 unit tests and 5 e2e specs pass on a memory DB. Manual tests on `aem-dev` not run |
+| Deploy | No Vercel project yet. Pushing to `main` deploys to production |
 
 ---
 
@@ -135,7 +135,7 @@ Each row is one plan in `docs/plans/`. Sizes are relative (S, M, L), not time es
 | # | Plan | Size | What it gives | Status |
 |---|---|---|---|---|
 | 7-01 | `e2e` | M | Playwright on a memory DB: household flow, admin flow, `no-store` on every route | Built |
-| 7-02 | `deploy` | S | README, CI, Vercel env setup, `db:indexes` on both DBs, first production deploy | Planned |
+| 7-02 | `deploy` | S | README, Vercel env setup, `db:indexes` on both DBs, first production deploy (no CI: Vercel builds) | README done; deploy is yours |
 
 ---
 

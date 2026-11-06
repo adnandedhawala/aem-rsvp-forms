@@ -1,36 +1,66 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# aem-rsvp-forms
 
-## Getting Started
+RSVP app for AEM. Each RSVP is a file in `forms/`. Admins invite members (file no + ITS) and see or edit responses; households sign in with file no + ITS and submit one form for every invited member. One Next.js 16 app (App Router, TypeScript), MongoDB via Mongoose, deployed on Vercel.
 
-First, run the development server:
+- What and why: [`docs/superpowers/specs/2026-11-06-rsvp-forms-design.md`](docs/superpowers/specs/2026-11-06-rsvp-forms-design.md)
+- Build order, status and rules: [`RSVP-DEV-PLAN.md`](RSVP-DEV-PLAN.md)
+
+## Adding a form
+
+1. Copy `forms/sample-rsvp.ts` to `forms/<slug>.ts`.
+2. Set the slug, title, dates, `signIn` and fields.
+3. Add one line in `forms/index.ts`.
+4. Run `npm test` and `npm run build` (a bad form fails the build).
+5. Deploy.
+6. Invite people at `/admin/r/<slug>/invitees`.
+
+**Never rename a field `name` once people have answered.** The name is the key in the stored answers.
+
+## Local setup
 
 ```bash
+cp .env.example .env.local   # fill in the aem-dev values
+npm i
 npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+## Databases
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+| Where | `MONGODB_DBNAME` |
+|---|---|
+| Local, tests, Vercel previews | `aem-dev` |
+| Vercel production only | `aem-prod` |
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+`MONGODB_DBNAME` must be `aem-dev` or `aem-prod`, and `aem-prod` is refused unless `VERCEL_ENV` is `production`. Never point local work at `aem-prod`. The only new collection is `rsvp_entry`; the AEM models are read-only copies of `aem-shared`.
 
-## Learn More
+Every response is `no-store`. There is no caching anywhere.
 
-To learn more about Next.js, take a look at the following resources:
+## Vercel variables
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+| Variable | Preview | Production |
+|---|---|---|
+| `MONGODB_URI` | cluster URI | cluster URI |
+| `MONGODB_DBNAME` | `aem-dev` | `aem-prod` |
+| `JWT_SECRET` | dev secret (32+ chars) | **different** prod secret (32+ chars) |
+| `NEXT_PUBLIC_AG_GRID_LICENSE` | optional | optional |
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+Pushing to `main` deploys to production.
 
-## Deploy on Vercel
+## First deploy checklist
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+1. `npm run db:indexes` (on `aem-dev`).
+2. `npm run db:indexes -- --prod` (with the prod values in a temporary env; never commit them).
+3. Confirm an `Admin` user exists in each database.
+4. Push `main`.
+5. Open the production URL, check there is **no** DEV DATA strip, and log in as Admin.
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+## Scripts
+
+| Script | What |
+|---|---|
+| `npm run dev` | local server, on `aem-dev` |
+| `npm test` | vitest (memory MongoDB) |
+| `npm run lint` | biome |
+| `npm run build` | production build |
+| `npm run e2e` | playwright on a memory DB |
+| `npm run db:indexes` | `rsvp_entry` indexes on `aem-dev`; add `-- --prod` for `aem-prod` |

@@ -1,6 +1,6 @@
 # 7-02 Deploy: README, CI, Vercel
 
-Status: Planned · 6 Nov 2026
+Status: Built (README only; no CI by decision, Vercel steps are the owner's) · 6 Nov 2026
 Kind: new · Spec: 2b, 9 (hosting) · Depends on: 7-01
 
 ## Decide
