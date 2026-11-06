@@ -88,7 +88,7 @@ Each row is one plan in `docs/plans/`. Sizes are relative (S, M, L), not time es
 
 | # | Plan | Size | What it gives | Status |
 |---|---|---|---|---|
-| 1-01 | `form-definitions` | M | `defineForm`, `validateAnswers`, registry, `sample-rsvp` form | Planned |
+| 1-01 | `form-definitions` | M | `defineForm`, `validateAnswers`, registry, `sample-rsvp` form | Built |
 
 ### Phase 2. Admin sign-in
 

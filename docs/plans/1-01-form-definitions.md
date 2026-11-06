@@ -1,6 +1,6 @@
 # 1-01 Form definitions, answer checking, registry
 
-Status: Planned · 6 Nov 2026
+Status: Built · 6 Nov 2026
 Kind: new · Spec: 3 (a form file) · Depends on: 0-01
 
 ## Decide
