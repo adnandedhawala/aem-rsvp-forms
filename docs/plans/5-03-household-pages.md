@@ -1,6 +1,6 @@
 # 5-03 Household pages: sign-in, form, thank-you
 
-Status: Planned · 6 Nov 2026
+Status: Built · 6 Nov 2026
 Kind: new · Spec: 5 · Depends on: 3-01, 3-02, 5-02
 
 ## Decide
