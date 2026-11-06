@@ -101,7 +101,7 @@ Each row is one plan in `docs/plans/`. Sizes are relative (S, M, L), not time es
 | # | Plan | Size | What it gives | Status |
 |---|---|---|---|---|
 | 3-01 | `household-sign-in` | M | `signInHousehold`, `GET /rsvp/[slug]`, `POST /rsvp/[slug]/sign-in` | Built |
-| 3-02 | `household-answers` | L | `getHousehold`, `saveHousehold` (transaction), household + admin household routes | Planned |
+| 3-02 | `household-answers` | L | `getHousehold`, `saveHousehold` (transaction), household + admin household routes | Built |
 
 ### Phase 4. Admin API
 

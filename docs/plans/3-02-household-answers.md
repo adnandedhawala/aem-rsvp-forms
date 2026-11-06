@@ -1,6 +1,6 @@
 # 3-02 Household answers: read and save (household + admin)
 
-Status: Planned · 6 Nov 2026
+Status: Built · 6 Nov 2026
 Kind: new · Spec: 5 step 2, 4.4 (admin edit), 6 (two kinds of entry, transaction) · Depends on: 3-01
 
 ## Decide
