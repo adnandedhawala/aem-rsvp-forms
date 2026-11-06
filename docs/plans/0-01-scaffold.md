@@ -1,6 +1,6 @@
 # 0-01 Scaffold
 
-Status: Planned · 6 Nov 2026
+Status: Built · 6 Nov 2026
 Kind: new · Spec: 2 (stack) · Depends on: none
 
 ## Decide
