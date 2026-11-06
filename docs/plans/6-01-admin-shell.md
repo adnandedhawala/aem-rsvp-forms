@@ -1,6 +1,6 @@
 # 6-01 Admin shell, login page, RSVP list
 
-Status: Planned · 6 Nov 2026
+Status: Built · 6 Nov 2026
 Kind: new · Spec: 4.1, 4.2 · Depends on: 2-01, 4-02, 5-01
 
 ## Decide
