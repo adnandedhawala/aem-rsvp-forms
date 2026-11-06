@@ -1,6 +1,6 @@
 # 6-02 Invitees page (grid, paste, Excel upload)
 
-Status: Planned · 6 Nov 2026
+Status: Built · 6 Nov 2026
 Kind: new · Spec: 4.3 · Depends on: 4-01, 6-01
 
 ## Decide
