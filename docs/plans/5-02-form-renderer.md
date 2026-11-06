@@ -1,6 +1,6 @@
 # 5-02 Form renderer
 
-Status: Planned · 6 Nov 2026
+Status: Built · 6 Nov 2026
 Kind: new · Spec: 3, 5 step 2, 4.4 (admin mode) · Depends on: 3-02 (types), 5-01
 
 ## Decide

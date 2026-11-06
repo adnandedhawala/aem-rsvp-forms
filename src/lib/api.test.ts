@@ -17,13 +17,11 @@ describe("api", () => {
 	it("throws ApiError with the server's message and details", async () => {
 		vi.stubGlobal(
 			"fetch",
-			vi
-				.fn()
-				.mockResolvedValue(
-					new Response(JSON.stringify({ error: "bad", details: { a: 1 } }), {
-						status: 422,
-					}),
-				),
+			vi.fn().mockResolvedValue(
+				new Response(JSON.stringify({ error: "bad", details: { a: 1 } }), {
+					status: 422,
+				}),
+			),
 		);
 		const err = await api("/x").catch((e) => e);
 		expect(err).toBeInstanceOf(ApiError);
