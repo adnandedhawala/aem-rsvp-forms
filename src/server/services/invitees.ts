@@ -1,7 +1,13 @@
 import "server-only";
 import { z } from "zod";
 import { HttpError } from "../http";
-import { File, Member, RsvpEntry } from "../models";
+import {
+	File,
+	filesWithMembers,
+	Member,
+	memberIdsOf,
+	RsvpEntry,
+} from "../models";
 
 const MAX_ROWS = 5000;
 
@@ -51,11 +57,52 @@ function cleanRows(rows: InviteeRowInput[]): InviteeRowInput[] {
 		.filter((r) => r.fileNo !== "" || r.its !== "");
 }
 
+/**
+ * Rows with an ITS but no file no get the file no of the one file whose
+ * member_ids holds that ITS. Rows matching no file or several files keep the
+ * empty file no and are reported by validateInviteeRows.
+ */
+async function fillFileNos(
+	rows: InviteeRowInput[],
+): Promise<(InviteeRowInput & { lookup?: string })[]> {
+	const need = [
+		...new Set(
+			rows
+				.filter((r) => r.fileNo === "" && /^\d{8}$/.test(r.its))
+				.map((r) => r.its),
+		),
+	];
+	if (need.length === 0) return rows;
+	const files = await filesWithMembers(need);
+	const fileNosByIts = new Map<string, number[]>();
+	for (const f of files) {
+		if (f.tanzeem_file_no == null) continue;
+		for (const id of memberIdsOf(f)) {
+			fileNosByIts.set(id, [
+				...(fileNosByIts.get(id) ?? []),
+				f.tanzeem_file_no,
+			]);
+		}
+	}
+	return rows.map((r) => {
+		if (r.fileNo !== "" || !/^\d{8}$/.test(r.its)) return r;
+		const found = fileNosByIts.get(r.its) ?? [];
+		if (found.length === 1) return { ...r, fileNo: String(found[0]) };
+		return {
+			...r,
+			lookup:
+				found.length === 0
+					? "ITS is not in any file"
+					: "ITS is in more than one file",
+		};
+	});
+}
+
 export async function validateInviteeRows(
 	slug: string,
 	rawRows: InviteeRowInput[],
 ): Promise<InviteeRowResult[]> {
-	const rows = cleanRows(rawRows);
+	const rows = await fillFileNos(cleanRows(rawRows));
 	const fileNos = [
 		...new Set(
 			rows.filter((r) => /^\d+$/.test(r.fileNo)).map((r) => Number(r.fileNo)),
@@ -81,19 +128,22 @@ export async function validateInviteeRows(
 	const invited = new Set(entries.map((e) => e.member_id));
 	const seen = new Set<string>();
 
-	return rows.map((r): InviteeRowResult => {
+	return rows.map(({ lookup, ...r }): InviteeRowResult => {
 		const fail = (error: string): InviteeRowResult => ({
 			...r,
 			ok: false,
 			error,
 		});
+		if (lookup) return fail(lookup);
+		if (r.fileNo === "" && !/^\d{8}$/.test(r.its))
+			return fail("ITS must be 8 digits");
 		if (!/^\d+$/.test(r.fileNo)) return fail("File no must be a number");
 		if (!/^\d{8}$/.test(r.its)) return fail("ITS must be 8 digits");
 		const file = fileByNo.get(Number(r.fileNo));
 		if (!file) return fail("File not found");
 		const member = memberById.get(r.its);
 		if (!member) return fail("ITS not found");
-		if (!(file.member_ids ?? []).includes(r.its))
+		if (!memberIdsOf(file).includes(r.its))
 			return fail("ITS is not in this file");
 		if (seen.has(r.its)) return fail("Duplicate row");
 		seen.add(r.its);

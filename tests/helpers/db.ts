@@ -53,22 +53,24 @@ const subSector = {
 };
 
 export async function seedBasic(): Promise<void> {
-	await File.insertMany([
+	// Raw insert: aem-shared stores member_ids as ints, which the String
+	// schema would otherwise cast away.
+	await File.collection.insertMany([
 		{
 			_id: "10000001",
 			tanzeem_file_no: 101,
 			hof_name: "Hof A",
-			member_ids: ["10000001", "10000002", "10000003"],
+			member_ids: [10000001, 10000002, 10000003],
 			sub_sector: subSector,
 		},
 		{
 			_id: "20000001",
 			tanzeem_file_no: 202,
 			hof_name: "Hof B",
-			member_ids: ["20000001", "20000002"],
+			member_ids: [20000001, 20000002],
 			sub_sector: subSector,
 		},
-	]);
+	] as never[]);
 	const m = (
 		id: string,
 		hof: string,

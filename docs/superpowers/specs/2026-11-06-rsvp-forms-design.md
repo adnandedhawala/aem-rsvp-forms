@@ -283,12 +283,13 @@ The existing models are **copied** from `@aemmarol/aem-shared` (same schemas, sa
 The new model has **two kinds of document**, both in `rsvp_entry`. **[my call]**
 - **Member entries:** one per (RSVP, invited member). Created when the admin invites the member; holds that member's answers.
 - **Household entry:** one per (RSVP, file), only if the form has `householdFields`. Created on the first submit; holds the household answers.
+- **Control entry** (added in 6-04): at most one per RSVP, `kind: "control"`, `file_id: "-"`, `member_id: null`, `tanzeem_file_no: 0`. `data: { closed }` is the admin close switch; `invited_by` is the admin who last changed it, `updatedAt` when.
 
 ```ts
 // rsvp_entry
 {
   rsvp: String,              // form slug, e.g. "ashara-1448"
-  kind: "member" | "household",
+  kind: "member" | "household" | "control",
   file_id: String,           // File._id (HOF ITS) → File
   tanzeem_file_no: Number,   // copied so sign-in can look up by file no fast
   member_id: String | null,  // ITS → Member  (null for household entries)

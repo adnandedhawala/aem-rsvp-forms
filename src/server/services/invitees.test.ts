@@ -6,7 +6,7 @@ import {
 	startTestDb,
 	stopTestDb,
 } from "../../../tests/helpers/db";
-import { RsvpEntry } from "../models";
+import { File, RsvpEntry } from "../models";
 import { saveHousehold } from "./households";
 import {
 	addInvitees,
@@ -69,6 +69,35 @@ describe("validateInviteeRows", () => {
 			sector: "Sector One",
 		});
 		expect(res[0].full_name).toBeTruthy();
+	});
+	it("fills the file no from the ITS when it is left empty", async () => {
+		const res = await validateInviteeRows(slug, [
+			row("", "20000002"),
+			row("", "99999999"),
+			row("", "123"),
+		]);
+		expect(res[0]).toMatchObject({ ok: true, fileNo: "202" });
+		expect(res.slice(1).map((r) => r.error)).toEqual([
+			"ITS is not in any file",
+			"ITS must be 8 digits",
+		]);
+	});
+	it("refuses to guess when an ITS is in more than one file", async () => {
+		await File.collection.insertOne({
+			_id: "x1",
+			tanzeem_file_no: 303,
+			member_ids: [20000002],
+		} as never);
+		const [r] = await validateInviteeRows(slug, [row("", "20000002")]);
+		expect(r).toMatchObject({
+			ok: false,
+			error: "ITS is in more than one file",
+		});
+	});
+	it("adds ITS-only rows under the file found", async () => {
+		await addInvitees(slug, [row("", "20000002")], "30000001");
+		const e = await RsvpEntry.findOne({ member_id: "20000002" }).lean();
+		expect(e).toMatchObject({ tanzeem_file_no: 202, file_id: "20000001" });
 	});
 	it("flags rows already invited", async () => {
 		await addInvitees(slug, [row("101", "10000002")], "30000001");

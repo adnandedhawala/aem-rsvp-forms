@@ -24,7 +24,7 @@ There is no form-builder screen. A developer adds one file and deploys.
 Things to know:
 
 - The household link is `/r/<slug>`.
-- The RSVP opens and closes on the dates in the form file. To close early, change `closesAt` and redeploy.
+- The RSVP opens and closes on the dates in the form file. An admin can also close it at any time from `/admin` (see below). For an RSVP with no end date, set `closesAt` far ahead (for example 2099): households then see no close date.
 - **Never rename a field `name` after people have answered.** The name is the key for the stored answers.
 
 ### 2. Log in
@@ -39,19 +39,23 @@ Things to know:
 
 `/admin` lists every form with its status (upcoming, open or closed). It also shows how many files and members are invited and how many have responded.
 
+**Close or reopen an RSVP:** click **Close** on its row and confirm. Households straight away see "This RSVP is closed" and can't sign in or submit. Admins can still view and edit responses. The tag shows `closed (by admin)`; hover it to see who closed it and when. Click **Reopen** to undo. Reopen only removes the admin's close: if the form's own dates have passed, it stays closed.
+
 ### 4. Invite people
 
 Open an RSVP, then **Invitees** (`/admin/r/<slug>/invitees`). One row is one member. To invite a whole family, add a row for each member.
 
 You can add people in three ways:
 
-- **Type** into the grid. It has blank rows, and you can add more.
-- **Paste** from Excel into the grid.
-- **Upload** an Excel or CSV file with the columns `file_no` and `its`.
+- **Type** into the grid. It has blank rows, and you can add more. Click a cell and start typing, or double-click to edit what is there.
+- **Paste** from Excel into the grid. Click the top-left cell, then press Ctrl+V (Cmd+V on a Mac). Drag or Shift+click to select several cells.
+- **Upload** an Excel or CSV file with an `its` column and, optionally, `file_no`.
+
+The file number is optional. Leave it empty and it is filled in from the ITS.
 
 Then:
 
-1. Each row is checked. The ITS must exist, it must belong to that file, and there must be no duplicates. Bad rows turn red and show the reason. Good rows show the member's name, age, gender, HOF and sector.
+1. Each row is checked. The ITS must exist, it must belong to that file, and there must be no duplicates. Bad rows turn red and show the reason. Good rows show the member's name, age, gender, HOF and sector. Clicking **Check rows** checks everything again and removes the empty rows.
 2. Fix or delete the red rows.
 3. Click **Save**.
 
@@ -132,4 +136,4 @@ Your sign-in lasts about 30 minutes. If it expires, sign in again. Your saved an
 | A household can't sign in | Check they are on the invited list, the RSVP is open, and they are using the ITS type the form allows. |
 | A member is missing from the household form | They weren't invited, or were removed. Add them on the invitees page. |
 | A household needs a change after the RSVP closed | The admin can edit it with **Open form** on the responses page. |
-| Need to close or reopen early | Change `opensAt` or `closesAt` in the form file and redeploy. |
+| Need to close or reopen early | Use **Close** / **Reopen** on `/admin`. To open before `opensAt` or keep it open past `closesAt`, change the date in the form file and redeploy. |

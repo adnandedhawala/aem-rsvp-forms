@@ -17,6 +17,13 @@ interface RsvpInfo {
 	signInIts: "hof" | "member" | "either";
 }
 
+// A close date more than a year away is a placeholder for "open until the
+// admin closes it", so households don't see it.
+const YEAR_MS = 365 * 24 * 60 * 60 * 1000;
+function showsCloseDate(closesAt: string): boolean {
+	return new Date(closesAt).getTime() - Date.now() < YEAR_MS;
+}
+
 const ITS_LABEL = {
 	hof: "HOF ITS",
 	member: "Your ITS",
@@ -52,7 +59,9 @@ export function SignInClient({ slug }: { slug: string }) {
 		body = (
 			<>
 				<h1 className="text-xl font-semibold">{d.title}</h1>
-				{d.description && <p className="text-zinc-600">{d.description}</p>}
+				{d.description && (
+					<p className="whitespace-pre-line text-zinc-600">{d.description}</p>
+				)}
 				{d.status === "upcoming" && (
 					<Alert
 						type="info"
@@ -64,9 +73,11 @@ export function SignInClient({ slug }: { slug: string }) {
 				)}
 				{d.status === "open" && (
 					<>
-						<p className="text-sm text-zinc-500">
-							Closes {formatDate(d.closesAt)}
-						</p>
+						{showsCloseDate(d.closesAt) && (
+							<p className="text-sm text-zinc-500">
+								Closes {formatDate(d.closesAt)}
+							</p>
+						)}
 						<Form
 							layout="vertical"
 							onFinish={(v) => signIn.mutate(v)}

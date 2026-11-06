@@ -1,7 +1,7 @@
 "use client";
 
 import { type Answers, type FieldDef, isFieldVisible } from "@forms/_fields";
-import { formStatus, getForm } from "@forms/index";
+import { getForm } from "@forms/index";
 import { useQuery } from "@tanstack/react-query";
 import { Alert, Card } from "antd";
 import Link from "next/link";
@@ -95,7 +95,7 @@ export function DoneClient({ slug }: { slug: string }) {
 							data={m.data}
 						/>
 					))}
-					{formStatus(form) === "open" && (
+					{v.status === "open" && (
 						<Link
 							prefetch={false}
 							href={`/r/${slug}/form`}

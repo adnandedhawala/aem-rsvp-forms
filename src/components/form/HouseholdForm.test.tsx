@@ -25,6 +25,7 @@ const view = (first: Record<string, unknown> | null = null): HouseholdView => ({
 	household: { data: null, submitted_at: null },
 	members: [member("10000001", first), member("10000002")],
 	lastSavedAt: null,
+	status: "open",
 });
 
 const setup = (props: Partial<Parameters<typeof HouseholdForm>[0]> = {}) => {

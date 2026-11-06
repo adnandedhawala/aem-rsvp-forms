@@ -1,7 +1,7 @@
 "use client";
 
-import { useQuery } from "@tanstack/react-query";
-import { Alert, Table, Tag } from "antd";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { Alert, App, Button, Table, Tag, Tooltip } from "antd";
 import dayjs from "dayjs";
 import Link from "next/link";
 import { AdminShell } from "@/components/admin/AdminShell";
@@ -12,10 +12,36 @@ const COLOR = { upcoming: "blue", open: "green", closed: "default" } as const;
 const fmt = (iso: string) => dayjs(iso).format("DD MMM YYYY, HH:mm");
 
 export function RsvpListClient() {
+	const { message, modal } = App.useApp();
+	const qc = useQueryClient();
 	const q = useQuery({
 		queryKey: ["admin-rsvps"],
 		queryFn: () => api<{ forms: FormStats[] }>("/api/v1/admin/rsvp"),
 	});
+	const setClosed = useMutation({
+		mutationFn: (v: { slug: string; closed: boolean }) =>
+			api(`/api/v1/admin/rsvp/${v.slug}/close`, {
+				method: "POST",
+				body: { closed: v.closed },
+			}),
+		onSuccess: (_, v) => {
+			message.success(v.closed ? "RSVP closed" : "RSVP reopened");
+			qc.invalidateQueries({ queryKey: ["admin-rsvps"] });
+		},
+		onError: (err) => message.error(err.message),
+	});
+	const confirmToggle = (r: FormStats) => {
+		const closed = !r.adminClosed;
+		modal.confirm({
+			title: closed ? `Close "${r.title}"?` : `Reopen "${r.title}"?`,
+			content: closed
+				? "Households won't be able to sign in or submit. Admins can still edit responses."
+				: "Households can sign in and submit again, if its dates allow.",
+			okText: closed ? "Close RSVP" : "Reopen",
+			okButtonProps: { danger: closed },
+			onOk: () => setClosed.mutateAsync({ slug: r.slug, closed }),
+		});
+	};
 	return (
 		<AdminShell title="RSVPs">
 			{q.error && <Alert type="error" message={q.error.message} />}
@@ -30,7 +56,16 @@ export function RsvpListClient() {
 					{
 						title: "Status",
 						dataIndex: "status",
-						render: (s: FormStats["status"]) => <Tag color={COLOR[s]}>{s}</Tag>,
+						render: (s: FormStats["status"], r) =>
+							r.adminClosed ? (
+								<Tooltip
+									title={`Closed by admin ${r.adminClosed.by ?? ""} on ${r.adminClosed.at ? fmt(r.adminClosed.at) : ""}`}
+								>
+									<Tag color={COLOR[s]}>{s} (by admin)</Tag>
+								</Tooltip>
+							) : (
+								<Tag color={COLOR[s]}>{s}</Tag>
+							),
 					},
 					{ title: "Opens", dataIndex: "opensAt", render: fmt },
 					{ title: "Closes", dataIndex: "closesAt", render: fmt },
@@ -54,6 +89,13 @@ export function RsvpListClient() {
 								<Link prefetch={false} href={`/admin/r/${r.slug}/responses`}>
 									Responses
 								</Link>
+								<Button
+									size="small"
+									danger={!r.adminClosed}
+									onClick={() => confirmToggle(r)}
+								>
+									{r.adminClosed ? "Reopen" : "Close"}
+								</Button>
 							</span>
 						),
 					},

@@ -1,10 +1,11 @@
 import "server-only";
 import { type Answers, type FormDef, validateAnswers } from "@forms/_fields";
-import { formStatus } from "@forms/index";
+import type { FormStatus } from "@forms/index";
 import mongoose from "mongoose";
 import type { HouseholdClaims } from "../auth/tokens";
 import { HttpError } from "../http";
-import { File, Member, RsvpEntry } from "../models";
+import { File, Member, memberIdsOf, RsvpEntry } from "../models";
+import { rsvpStatus } from "./control";
 
 const MISMATCH = "File number and ITS don't match";
 
@@ -15,7 +16,7 @@ export async function signInHousehold(input: {
 	now?: Date;
 }): Promise<HouseholdClaims> {
 	const { form, fileNo, its } = input;
-	if (formStatus(form, input.now) !== "open")
+	if ((await rsvpStatus(form, input.now)) !== "open")
 		throw new HttpError(403, "This RSVP is not open");
 
 	const file = await File.findOne({ tanzeem_file_no: fileNo }).lean();
@@ -32,7 +33,7 @@ export async function signInHousehold(input: {
 	if (invited.length === 0) throw new HttpError(401, MISMATCH);
 
 	const isHof = its === file._id;
-	const isMember = (file.member_ids ?? []).includes(its);
+	const isMember = memberIdsOf(file).includes(its);
 	const allowed =
 		form.signIn.its === "hof"
 			? isHof
@@ -69,6 +70,7 @@ export interface HouseholdView {
 	household: { data: Answers | null; submitted_at: string | null } | null;
 	members: HouseholdMember[];
 	lastSavedAt: string | null;
+	status: FormStatus;
 }
 
 export interface HouseholdPayload {
@@ -98,7 +100,7 @@ export async function getHousehold(input: {
 	);
 	const order = [
 		file._id,
-		...(file.member_ids ?? []).filter((id) => id !== file._id),
+		...memberIdsOf(file).filter((id) => id !== file._id),
 	].filter((id) => invited.has(id));
 	const people = await Member.find({ _id: { $in: order } }).lean();
 	const byId = new Map(people.map((p) => [p._id, p]));
@@ -141,6 +143,7 @@ export async function getHousehold(input: {
 			: null,
 		members,
 		lastSavedAt: iso(last),
+		status: await rsvpStatus(form),
 	};
 }
 
@@ -166,7 +169,7 @@ export async function saveHousehold(input: {
 }): Promise<HouseholdView> {
 	const { form, fileId, payload, by, via } = input;
 	const now = input.now ?? new Date();
-	if (via === "household" && formStatus(form, now) !== "open") {
+	if (via === "household" && (await rsvpStatus(form, now)) !== "open") {
 		throw new HttpError(403, "This RSVP is closed");
 	}
 

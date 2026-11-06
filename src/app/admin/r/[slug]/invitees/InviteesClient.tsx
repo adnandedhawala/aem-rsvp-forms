@@ -30,8 +30,7 @@ function statusOf(row: GridRow): string {
 		const fileNo = row.fileNo.trim();
 		const its = row.its.trim();
 		if (fileNo && !its) return "Enter ITS";
-		if (its && !fileNo) return "Enter file no";
-		return fileNo ? "Checking…" : "";
+		return its ? "Checking…" : "";
 	}
 	if (!row.check.ok) return row.check.error ?? "Error";
 	return row.check.alreadyInvited ? "Already invited" : "OK";
@@ -95,7 +94,10 @@ export function InviteesClient({ slug }: { slug: string }) {
 					const hit = byId.get(r.id);
 					const same =
 						hit && hit.row.fileNo === r.fileNo && hit.row.its === r.its;
-					return same ? { ...r, check: hit.result } : r;
+					// An ITS-only row gets the file no the server found for it
+					return same
+						? { ...r, fileNo: r.fileNo || hit.result.fileNo, check: hit.result }
+						: r;
 				}),
 			);
 		},
@@ -105,14 +107,12 @@ export function InviteesClient({ slug }: { slug: string }) {
 		},
 	});
 
-	// Look up rows as soon as both file no and ITS are entered, so names fill
-	// in and Save turns on without pressing "Check rows".
+	// Look up rows as soon as an ITS is entered (file no is optional and filled
+	// from the ITS), so details fill in and Save turns on without "Check rows".
 	const { mutate: runCheck, isPending: checking } = check;
 	useEffect(() => {
 		if (checking || autoPaused) return;
-		const ready = rows.filter(
-			(r) => r.fileNo.trim() && r.its.trim() && !r.check,
-		);
+		const ready = rows.filter((r) => r.its.trim() && !r.check);
 		if (ready.length === 0) return;
 		const t = setTimeout(() => runCheck(ready), 300);
 		return () => clearTimeout(t);
@@ -257,7 +257,11 @@ export function InviteesClient({ slug }: { slug: string }) {
 					<Button
 						disabled={filled.length === 0}
 						loading={check.isPending}
-						onClick={() => check.mutate(filled)}
+						onClick={() => {
+							// Drop completely empty rows so the grid holds only real entries
+							setRows(filled);
+							check.mutate(filled);
+						}}
 					>
 						Check rows
 					</Button>
@@ -276,7 +280,6 @@ export function InviteesClient({ slug }: { slug: string }) {
 						columnDefs={addCols}
 						getRowId={(p) => p.data.id}
 						cellSelection
-						singleClickEdit
 						stopEditingWhenCellsLoseFocus
 						rowClassRules={{
 							"bg-red-50": (p) => !!p.data?.check && !p.data.check.ok,

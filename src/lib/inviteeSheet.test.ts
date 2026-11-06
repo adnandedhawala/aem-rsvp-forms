@@ -36,10 +36,16 @@ describe("parseInviteeSheet", () => {
 			parseInviteeSheet(book([["Tanzeem File No.", "ITS"], ...body])),
 		).toEqual(expected);
 	});
-	it("throws when a column is missing", () => {
-		expect(() => parseInviteeSheet(book([["Name", "ITS"], ...body]))).toThrow(
-			"Sheet needs File No and ITS columns",
-		);
+	it("allows a sheet with only ITS", () => {
+		expect(parseInviteeSheet(book([["Name", "ITS"], ...body]))).toEqual([
+			{ fileNo: "", its: "10000001" },
+			{ fileNo: "", its: "10000002" },
+		]);
+	});
+	it("throws when the ITS column is missing", () => {
+		expect(() =>
+			parseInviteeSheet(book([["File No", "Name"], ...body])),
+		).toThrow("Sheet needs an ITS column");
 	});
 	it("reads CSV", () => {
 		expect(

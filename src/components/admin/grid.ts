@@ -6,6 +6,7 @@ import {
 	themeQuartz,
 } from "ag-grid-community";
 import {
+	CellSelectionModule,
 	ClipboardModule,
 	ExcelExportModule,
 	LicenseManager,
@@ -20,6 +21,7 @@ export function registerGrid(): void {
 	registered = true;
 	ModuleRegistry.registerModules([
 		AllCommunityModule,
+		CellSelectionModule,
 		ClipboardModule,
 		ExcelExportModule,
 		SetFilterModule,

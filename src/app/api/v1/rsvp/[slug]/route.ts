@@ -1,5 +1,6 @@
-import { formStatus, getForm } from "@forms/index";
+import { getForm } from "@forms/index";
 import { HttpError, json, withRoute } from "@/server/http";
+import { rsvpStatus } from "@/server/services/control";
 
 export const dynamic = "force-dynamic";
 export const revalidate = 0;
@@ -15,7 +16,7 @@ export const GET = withRoute(
 			description: form.description,
 			opensAt: form.opensAt,
 			closesAt: form.closesAt,
-			status: formStatus(form),
+			status: await rsvpStatus(form),
 			signInIts: form.signIn.its,
 		});
 	},

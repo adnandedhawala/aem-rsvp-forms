@@ -2,6 +2,7 @@ import "server-only";
 import type { Answers, FormDef } from "@forms/_fields";
 import { type FormStatus, formStatus } from "@forms/index";
 import { File, Member, RsvpEntry } from "../models";
+import { getAdminClose } from "./control";
 
 export interface ResponseRow {
 	fileNo: number;
@@ -31,6 +32,8 @@ export interface FormStats {
 	invitedFiles: number;
 	answeredMembers: number;
 	answeredFiles: number;
+	/** Set while an admin has closed this RSVP. */
+	adminClosed: { by: string | null; at: string | null } | null;
 }
 
 const iso = (d: Date | null | undefined) =>
@@ -101,16 +104,19 @@ export async function getFormStats(form: FormDef): Promise<FormStats> {
 	})
 		.select("file_id data")
 		.lean();
+	const close = await getAdminClose(form.slug);
+	const byDate = formStatus(form);
 	const answered = entries.filter((e) => hasData(e.data));
 	return {
 		slug: form.slug,
 		title: form.title,
-		status: formStatus(form),
+		status: byDate === "open" && close.closed ? "closed" : byDate,
 		opensAt: form.opensAt,
 		closesAt: form.closesAt,
 		invitedMembers: entries.length,
 		invitedFiles: new Set(entries.map((e) => e.file_id)).size,
 		answeredMembers: answered.length,
 		answeredFiles: new Set(answered.map((e) => e.file_id)).size,
+		adminClosed: close.closed ? { by: close.by, at: close.at } : null,
 	};
 }

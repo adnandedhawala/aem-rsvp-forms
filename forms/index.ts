@@ -1,7 +1,9 @@
 import type { FormDef } from "./_fields";
 import sampleRsvp from "./sample-rsvp";
+import tncDarees2026 from "./tnc-darees-2026";
 
-export const forms: FormDef[] = [sampleRsvp];
+// The home page opens the first open form in this list.
+export const forms: FormDef[] = [tncDarees2026, sampleRsvp];
 
 const slugs = new Set<string>();
 for (const f of forms) {

@@ -14,11 +14,11 @@ export function parseInviteeSheet(data: ArrayBuffer): InviteeRowInput[] {
 	const headers = Object.keys(rows[0] ?? {});
 	const fileKey = headers.find((h) => FILE_KEYS.includes(norm(h)));
 	const itsKey = headers.find((h) => ITS_KEYS.includes(norm(h)));
-	if (!fileKey || !itsKey)
-		throw new Error("Sheet needs File No and ITS columns");
+	// File No is optional: rows without one get it from the ITS when checked
+	if (!itsKey) throw new Error("Sheet needs an ITS column");
 	return rows
 		.map((r) => ({
-			fileNo: String(r[fileKey]).trim(),
+			fileNo: fileKey ? String(r[fileKey]).trim() : "",
 			its: String(r[itsKey]).trim(),
 		}))
 		.filter((r) => r.fileNo !== "" || r.its !== "");
