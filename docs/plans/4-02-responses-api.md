@@ -1,6 +1,6 @@
 # 4-02 Responses and RSVP stats API
 
-Status: Planned · 6 Nov 2026
+Status: Built · 6 Nov 2026
 Kind: new · Spec: 4.2, 4.4 · Depends on: 4-01
 
 ## Decide
