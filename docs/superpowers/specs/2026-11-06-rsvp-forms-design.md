@@ -47,11 +47,11 @@ It is still one app, like `aem-distribution-v2` and `ashara-rsvp`, but on the **
 | Part | Choice |
 |---|---|
 | App | Latest Next.js with the **App Router**, React 19, **TypeScript** (matching `zmq` and `aem-shared`, which makes the later move easier) |
-| UI | Ant Design 5 (`@ant-design/nextjs-registry` for SSR styles), Tailwind 4, TanStack Query 5 |
+| UI | Ant Design 6 (`@ant-design/nextjs-registry` for SSR styles), Tailwind 4, TanStack Query 5 |
 | Grids | AG Grid, the same as `zmq-fe` and `distribution` |
 | Excel/CSV | SheetJS (`xlsx`), installed from SheetJS's own package source, because the npm copy is stuck on an old version |
 | API | App Router **route handlers** (`app/api/v1/**/route.ts`), with small wrapper helpers for DB connect, admin auth and household auth. `next-connect` isn't needed |
-| Data | MongoDB via Mongoose 8, reading the shared `member` and `file` collections. The model shapes are copied from `aem-shared` so the later switch to the package is a straight swap |
+| Data | MongoDB via Mongoose 9, reading the shared `member` and `file` collections. The model shapes are copied from `aem-shared` so the later switch to the package is a straight swap |
 | Validation | Zod: one schema per form, used by both the UI and the API |
 | Auth | `jose` for the JWTs (it works in both Node and Edge), and `bcryptjs` for admin passwords |
 | Lint/format | Biome, matching `zmq` and `aem-auth` |
@@ -385,5 +385,5 @@ All open questions are answered. **[you]**
 These don't change what gets built, so they're settled during the build:
 - exact package versions (latest stable at start);
 - page styling details, within Ant Design + Tailwind and the AEM logo and colours;
-- the sign-in attempt limit (around 10 tries per IP per 15 minutes, kept in MongoDB rather than in memory, since Vercel runs several instances);
+- the sign-in attempt limit: 10 tries per IP + file no per 15 minutes, kept **in memory per server instance**. Storing it in MongoDB would need a second new collection, which conflicts with "only one new model". It is a speed bump, not a hard lock;
 - Excel column header matching (case-insensitive `file_no` / `file no` / `ITS` / `its_id`).
