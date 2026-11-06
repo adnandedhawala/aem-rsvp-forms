@@ -36,8 +36,18 @@ export function HouseholdForm(props: {
 			? serverErrors?.household
 			: serverErrors?.members?.[key]);
 
-	const setField = (key: string, name: string, v: unknown) =>
+	const setField = (key: string, name: string, v: unknown) => {
 		setValues((s) => ({ ...s, [key]: { ...s[key], [name]: v } }));
+		// Answering a field clears its "required" message right away.
+		setClientErrors((e) => {
+			if (!e[key]?.[name]) return e;
+			const { [name]: _, ...rest } = e[key];
+			const next = { ...e };
+			if (Object.keys(rest).length) next[key] = rest;
+			else delete next[key];
+			return next;
+		});
+	};
 
 	const handleSubmit = () => {
 		const errors: Errors = {};
@@ -67,9 +77,9 @@ export function HouseholdForm(props: {
 	};
 
 	return (
-		<div>
+		<div className="flex flex-col gap-4">
 			{mode === "admin" && (
-				<Tag color="gold" className="mb-4">
+				<Tag color="gold" className="self-start">
 					Editing as admin
 				</Tag>
 			)}
@@ -88,7 +98,7 @@ export function HouseholdForm(props: {
 					.filter((k) => k !== "full_name")
 					.map((k) => m[k])
 					.filter((v) => v !== undefined && v !== null && v !== "")
-					.join(" · ");
+					.join(", ");
 				return (
 					<AnswerCard
 						key={m.its}
@@ -108,6 +118,8 @@ export function HouseholdForm(props: {
 				block
 				loading={submitting}
 				onClick={handleSubmit}
+				className="mt-2"
+				style={{ height: 52, borderRadius: 12, fontWeight: 600 }}
 			>
 				Submit
 			</Button>

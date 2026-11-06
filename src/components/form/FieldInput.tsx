@@ -1,8 +1,9 @@
 "use client";
 
 import type { FieldDef } from "@forms/_fields";
-import { Checkbox, DatePicker, Input, InputNumber, Radio, Select } from "antd";
+import { Checkbox, DatePicker, Input, InputNumber, Select } from "antd";
 import dayjs from "dayjs";
+import { ChoiceButtons } from "./ChoiceButtons";
 
 export function FieldInput(props: {
 	field: FieldDef;
@@ -56,11 +57,11 @@ export function FieldInput(props: {
 			break;
 		case "radio":
 			control = (
-				<Radio.Group
-					optionType="button"
-					options={options}
-					value={value ?? null}
-					onChange={(e) => onChange(e.target.value)}
+				<ChoiceButtons
+					options={field.options ?? []}
+					value={value}
+					invalid={!!error}
+					onChange={onChange}
 				/>
 			);
 			break;
@@ -112,18 +113,16 @@ export function FieldInput(props: {
 	}
 
 	return (
-		<div className="mb-4">
+		<div className="flex flex-col gap-2">
 			{field.type !== "checkbox" && (
-				<div className="mb-1 text-sm font-medium">
+				<div className="text-[15px] font-medium leading-snug text-slate-800">
 					{field.label}
 					{field.required && <span className="text-red-600"> *</span>}
 				</div>
 			)}
 			{control}
-			{field.help && (
-				<div className="mt-1 text-xs text-zinc-500">{field.help}</div>
-			)}
-			{error && <div className="mt-1 text-xs text-red-600">{error}</div>}
+			{field.help && <div className="text-xs text-slate-500">{field.help}</div>}
+			{error && <div className="text-sm text-red-600">{error}</div>}
 		</div>
 	);
 }
