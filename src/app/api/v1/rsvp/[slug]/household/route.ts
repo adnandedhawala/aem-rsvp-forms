@@ -1,6 +1,6 @@
 import { requireHousehold } from "@/server/auth/session";
 import { json, withRoute } from "@/server/http";
-import { formOr404, readPayload } from "@/server/services/householdRoutes";
+import { formOr404, readPayload } from "@/server/routeHelpers";
 import { getHousehold, saveHousehold } from "@/server/services/households";
 
 export const dynamic = "force-dynamic";

@@ -108,6 +108,18 @@ describe("addInvitees", () => {
 	});
 });
 
+describe("concurrent adds", () => {
+	it("do not fail or double-insert when two admins add the same rows", async () => {
+		const rows = [row("101", "10000001"), row("101", "10000002")];
+		const [a, b] = await Promise.all([
+			addInvitees(slug, rows, "30000001"),
+			addInvitees(slug, rows, "30000002"),
+		]);
+		expect(a.added + b.added).toBe(2);
+		expect(await RsvpEntry.countDocuments({ kind: "member" })).toBe(2);
+	});
+});
+
 describe("removeInvitees and listInvitees", () => {
 	it("soft removes and reports answers", async () => {
 		await addInvitees(

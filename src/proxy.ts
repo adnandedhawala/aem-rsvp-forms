@@ -1,14 +1,9 @@
 import { type NextRequest, NextResponse } from "next/server";
+import { NO_STORE_HEADERS } from "./lib/noStore";
 import { ADMIN_COOKIE, verifyAdminToken } from "./server/auth/tokens";
 
-const NO_STORE = {
-	"Cache-Control": "no-store, no-cache, must-revalidate, max-age=0",
-	Pragma: "no-cache",
-	Expires: "0",
-};
-
 function withNoStore(res: NextResponse): NextResponse {
-	for (const [k, v] of Object.entries(NO_STORE)) res.headers.set(k, v);
+	for (const [k, v] of Object.entries(NO_STORE_HEADERS)) res.headers.set(k, v);
 	return res;
 }
 

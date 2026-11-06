@@ -1,7 +1,7 @@
 import { toPublicFields } from "@forms/_fields";
 import { requireAdmin } from "@/server/auth/session";
 import { json, withRoute } from "@/server/http";
-import { formOr404 } from "@/server/services/householdRoutes";
+import { formOr404 } from "@/server/routeHelpers";
 import { listResponses } from "@/server/services/responses";
 
 export const dynamic = "force-dynamic";

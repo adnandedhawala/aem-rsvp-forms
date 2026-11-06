@@ -116,6 +116,7 @@ export type ValidationResult =
 
 function isMissing(field: FieldDef, v: unknown): boolean {
 	if (v === undefined || v === null || v === "") return true;
+	if (typeof v === "string" && v.trim() === "") return true;
 	return field.type === "multiselect" && Array.isArray(v) && v.length === 0;
 }
 
@@ -129,12 +130,17 @@ function schemaFor(field: FieldDef): z.ZodType {
 			return s;
 		}
 		case "number": {
-			let s = z.coerce.number({ error: `${label} must be a number` });
+			const notNumber = `${label} must be a number`;
+			let n = z.number({ error: notNumber });
 			if (field.min !== undefined)
-				s = s.min(field.min, `${label} must be at least ${field.min}`);
+				n = n.min(field.min, `${label} must be at least ${field.min}`);
 			if (field.max !== undefined)
-				s = s.max(field.max, `${label} must be at most ${field.max}`);
-			return s;
+				n = n.max(field.max, `${label} must be at most ${field.max}`);
+			// Accept only numbers or non-blank numeric strings; never booleans or arrays
+			return z
+				.union([z.number(), z.string().trim().min(1)], { error: notNumber })
+				.pipe(z.coerce.number({ error: notNumber }))
+				.pipe(n);
 		}
 		case "radio":
 		case "select":
@@ -165,8 +171,10 @@ export function validateAnswers(
 			const r = schemaFor(field).safeParse(
 				value === undefined || value === null ? false : value,
 			);
-			if (r.success) data[field.name] = r.data;
-			else errors[field.name] = r.error.issues[0].message;
+			if (!r.success) errors[field.name] = r.error.issues[0].message;
+			else if (field.required && r.data !== true) {
+				errors[field.name] = `${field.label} is required`;
+			} else data[field.name] = r.data;
 			continue;
 		}
 		if (isMissing(field, value)) {

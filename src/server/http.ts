@@ -1,11 +1,8 @@
 import "server-only";
+import { NO_STORE_HEADERS } from "@/lib/noStore";
 import { connectDb } from "./db";
 
-export const NO_STORE_HEADERS = {
-	"Cache-Control": "no-store, no-cache, must-revalidate, max-age=0",
-	Pragma: "no-cache",
-	Expires: "0",
-};
+export { NO_STORE_HEADERS };
 
 export class HttpError extends Error {
 	status: number;

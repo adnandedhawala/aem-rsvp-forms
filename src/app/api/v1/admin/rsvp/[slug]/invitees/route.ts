@@ -1,9 +1,10 @@
 import { z } from "zod";
 import { requireAdmin } from "@/server/auth/session";
 import { HttpError, json, withRoute } from "@/server/http";
-import { formOr404 } from "@/server/services/householdRoutes";
+import { formOr404 } from "@/server/routeHelpers";
 import {
 	addInvitees,
+	InviteeRowsSchema,
 	listInvitees,
 	removeInvitees,
 } from "@/server/services/invitees";
@@ -13,11 +14,6 @@ export const revalidate = 0;
 
 type Ctx = { params: Promise<{ slug: string }> };
 
-const Rows = z.object({
-	rows: z.array(
-		z.object({ fileNo: z.coerce.string(), its: z.coerce.string() }),
-	),
-});
 const Ids = z.object({ memberIds: z.array(z.string()) });
 
 export const GET = withRoute(async (req, ctx: Ctx) => {
@@ -31,7 +27,9 @@ export const POST = withRoute(async (req, ctx: Ctx) => {
 	const admin = await requireAdmin(req);
 	const { slug } = await ctx.params;
 	formOr404(slug);
-	const parsed = Rows.safeParse(await req.json().catch(() => null));
+	const parsed = InviteeRowsSchema.safeParse(
+		await req.json().catch(() => null),
+	);
 	if (!parsed.success) throw new HttpError(400, "Invalid rows");
 	return json(await addInvitees(slug, parsed.data.rows, String(admin.itsId)));
 });

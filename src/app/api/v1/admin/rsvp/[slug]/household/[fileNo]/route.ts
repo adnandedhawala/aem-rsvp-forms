@@ -1,6 +1,6 @@
 import { requireAdmin } from "@/server/auth/session";
 import { HttpError, json, withRoute } from "@/server/http";
-import { formOr404, readPayload } from "@/server/services/householdRoutes";
+import { formOr404, readPayload } from "@/server/routeHelpers";
 import {
 	getHouseholdByFileNo,
 	saveHousehold,

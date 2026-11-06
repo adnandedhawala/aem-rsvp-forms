@@ -38,7 +38,6 @@ export function InviteesClient({ slug }: { slug: string }) {
 	const title = form?.title ?? slug;
 
 	const [rows, setRows] = useState<GridRow[]>(() => blanks(100));
-	const [checked, setChecked] = useState(false);
 	const [listApi, setListApi] = useState<GridApi<InviteeListRow> | null>(null);
 	const [search, setSearch] = useState("");
 	const [selected, setSelected] = useState<InviteeListRow[]>([]);
@@ -51,33 +50,43 @@ export function InviteesClient({ slug }: { slug: string }) {
 
 	const filled = rows.filter((r) => r.fileNo.trim() || r.its.trim());
 	const hasErrors = rows.some((r) => r.check && !r.check.ok);
-	const canSave = checked && !hasErrors && filled.length > 0;
+	// Every non-empty row must carry a fresh check result (edits clear it)
+	const checked = filled.length > 0 && filled.every((r) => r.check);
+	const canSave = checked && !hasErrors;
 
 	const edit = useCallback((id: string, patch: Partial<GridRow>) => {
-		setChecked(false);
 		setRows((rs) =>
 			rs.map((r) => (r.id === id ? { ...r, ...patch, check: undefined } : r)),
 		);
 	}, []);
 
 	const check = useMutation({
-		mutationFn: () =>
-			api<{ rows: InviteeRowResult[] }>(
+		// Snapshot the rows being checked so late results can't land on edited rows
+		mutationFn: async (snapshot: GridRow[]) => {
+			const res = await api<{ rows: InviteeRowResult[] }>(
 				`/api/v1/admin/rsvp/${slug}/invitees/validate`,
 				{
 					method: "POST",
-					body: { rows: filled.map((r) => ({ fileNo: r.fileNo, its: r.its })) },
+					body: {
+						rows: snapshot.map((r) => ({ fileNo: r.fileNo, its: r.its })),
+					},
 				},
-			),
-		onSuccess: ({ rows: results }) => {
-			// Results come back in the same order as the non-empty rows
-			let i = 0;
-			setRows((rs) =>
-				rs.map((r) =>
-					r.fileNo.trim() || r.its.trim() ? { ...r, check: results[i++] } : r,
-				),
 			);
-			setChecked(true);
+			return { snapshot, results: res.rows };
+		},
+		onSuccess: ({ snapshot, results }) => {
+			// Results come back in the same order as the snapshot
+			const byId = new Map(
+				snapshot.map((r, i) => [r.id, { row: r, result: results[i] }]),
+			);
+			setRows((rs) =>
+				rs.map((r) => {
+					const hit = byId.get(r.id);
+					const same =
+						hit && hit.row.fileNo === r.fileNo && hit.row.its === r.its;
+					return same ? { ...r, check: hit.result } : r;
+				}),
+			);
 		},
 		onError: (e) => message.error(e.message),
 	});
@@ -96,7 +105,6 @@ export function InviteesClient({ slug }: { slug: string }) {
 				`Added ${r.added}, restored ${r.restored}, already there ${r.unchanged}`,
 			);
 			setRows(blanks(100));
-			setChecked(false);
 			qc.invalidateQueries({ queryKey: ["invitees", slug] });
 		},
 		onError: (e) =>
@@ -175,7 +183,6 @@ export function InviteesClient({ slug }: { slug: string }) {
 	const upload = async (file: File) => {
 		try {
 			const parsed = parseInviteeSheet(await file.arrayBuffer());
-			setChecked(false);
 			setRows([...parsed.map((r) => ({ ...blank(), ...r })), ...blanks(20)]);
 			message.success(`Loaded ${parsed.length} rows. Now check them.`);
 		} catch (e) {
@@ -215,7 +222,6 @@ export function InviteesClient({ slug }: { slug: string }) {
 					<Button
 						onClick={() => {
 							setRows(blanks(100));
-							setChecked(false);
 						}}
 					>
 						Clear
@@ -223,7 +229,7 @@ export function InviteesClient({ slug }: { slug: string }) {
 					<Button
 						disabled={filled.length === 0}
 						loading={check.isPending}
-						onClick={() => check.mutate()}
+						onClick={() => check.mutate(filled)}
 					>
 						Check rows
 					</Button>

@@ -2,8 +2,8 @@ import "server-only";
 import type { FormDef } from "@forms/_fields";
 import { getForm } from "@forms/index";
 import { z } from "zod";
-import { HttpError } from "../http";
-import type { HouseholdPayload } from "./households";
+import { HttpError } from "./http";
+import type { HouseholdPayload } from "./services/households";
 
 export const PayloadSchema = z.object({
 	household: z.record(z.string(), z.unknown()).optional(),

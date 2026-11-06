@@ -8,3 +8,10 @@ it("blocks after max hits in the window, then recovers", () => {
 	expect(rl.hit("other", 0)).toBe(true);
 	expect(rl.hit("k", 1001)).toBe(true);
 });
+
+it("keeps counting a blocked key until its window passes", () => {
+	const rl = createRateLimiter({ max: 1, windowMs: 1000 });
+	expect(rl.hit("k", 0)).toBe(true);
+	expect(rl.hit("k", 500)).toBe(false);
+	expect(rl.hit("k", 1001)).toBe(true);
+});

@@ -1,8 +1,16 @@
 import "server-only";
+import { z } from "zod";
 import { HttpError } from "../http";
 import { File, Member, RsvpEntry } from "../models";
 
 const MAX_ROWS = 5000;
+
+/** Request body for validate/add: rows of file no + ITS (numbers are accepted and stringified). */
+export const InviteeRowsSchema = z.object({
+	rows: z.array(
+		z.object({ fileNo: z.coerce.string(), its: z.coerce.string() }),
+	),
+});
 
 export interface InviteeRowInput {
 	fileNo: string;
@@ -152,12 +160,24 @@ export async function addInvitees(
 			unchanged++;
 		}
 	}
-	if (toInsert.length) await RsvpEntry.insertMany(toInsert);
 	if (toRestore.length) {
 		await RsvpEntry.updateMany(
 			{ rsvp: slug, kind: "member", member_id: { $in: toRestore } },
 			{ $set: { is_removed: false } },
 		);
+	}
+	if (toInsert.length) {
+		try {
+			await RsvpEntry.insertMany(toInsert, { ordered: false });
+		} catch (err) {
+			// Another admin added some of these at the same moment: those are "unchanged"
+			const writeErrors = (err as { writeErrors?: { code?: number }[] })
+				.writeErrors;
+			if (!writeErrors?.length || writeErrors.some((w) => w.code !== 11000))
+				throw err;
+			added -= writeErrors.length;
+			unchanged += writeErrors.length;
+		}
 	}
 	return { added, restored, unchanged };
 }
@@ -196,6 +216,10 @@ export async function listInvitees(slug: string): Promise<InviteeListRow[]> {
 	]);
 	const fileById = new Map(files.map((f) => [f._id, f]));
 	const memberById = new Map(members.map((m) => [m._id, m]));
+	// A member is the HOF when their ITS is also the file id
+	const hofIds = new Set(
+		entries.filter((e) => e.file_id === e.member_id).map((e) => e.member_id),
+	);
 
 	return entries
 		.map((e): InviteeListRow => {
@@ -214,12 +238,8 @@ export async function listInvitees(slug: string): Promise<InviteeListRow[]> {
 		})
 		.sort((a, b) => {
 			if (a.fileNo !== b.fileNo) return a.fileNo - b.fileNo;
-			const aHof =
-				fileById.get(entries.find((e) => e.member_id === a.its)?.file_id ?? "")
-					?._id === a.its;
-			const bHof =
-				fileById.get(entries.find((e) => e.member_id === b.its)?.file_id ?? "")
-					?._id === b.its;
+			const aHof = hofIds.has(a.its);
+			const bHof = hofIds.has(b.its);
 			if (aHof !== bHof) return aHof ? -1 : 1;
 			return a.its.localeCompare(b.its);
 		});

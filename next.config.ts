@@ -1,17 +1,14 @@
 import type { NextConfig } from "next";
+import { NO_STORE_HEADERS } from "./src/lib/noStore";
 
-// Same values as NO_STORE_HEADERS in src/server/http.ts (that file is server-only,
-// so it can't be imported here).
-const noStore = [
-	{
-		key: "Cache-Control",
-		value: "no-store, no-cache, must-revalidate, max-age=0",
-	},
-	{ key: "Pragma", value: "no-cache" },
-	{ key: "Expires", value: "0" },
-];
+const noStore = Object.entries(NO_STORE_HEADERS).map(([key, value]) => ({
+	key,
+	value,
+}));
 
 const nextConfig: NextConfig = {
+	// Next.js rejects static: 0 (minimum is 30). Every page is dynamic and links use
+	// prefetch={false}, so this client router cache never applies; do not enable prefetch.
 	experimental: { staleTimes: { dynamic: 0, static: 30 } },
 	async headers() {
 		return [{ source: "/:path*", headers: noStore }];

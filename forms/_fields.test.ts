@@ -108,6 +108,38 @@ describe("validateAnswers", () => {
 	});
 });
 
+describe("validateAnswers edge cases", () => {
+	it("enforces a required checkbox", () => {
+		const f = [
+			{
+				name: "agree",
+				label: "I agree",
+				type: "checkbox" as const,
+				required: true,
+			},
+		];
+		expect(validateAnswers(f, {})).toMatchObject({ ok: false });
+		expect(validateAnswers(f, { agree: false })).toMatchObject({ ok: false });
+		expect(validateAnswers(f, { agree: true })).toEqual({
+			ok: true,
+			data: { agree: true },
+		});
+	});
+	it("treats a blank-space number as missing and rejects non-numbers", () => {
+		const f = [
+			{ name: "n", label: "N", type: "number" as const, required: true },
+		];
+		expect(validateAnswers(f, { n: "   " })).toMatchObject({ ok: false });
+		expect(validateAnswers(f, { n: true })).toMatchObject({ ok: false });
+		expect(validateAnswers(f, { n: [5] })).toMatchObject({ ok: false });
+		expect(validateAnswers(f, { n: "abc" })).toMatchObject({ ok: false });
+		expect(validateAnswers(f, { n: " 7 " })).toEqual({
+			ok: true,
+			data: { n: 7 },
+		});
+	});
+});
+
 describe("toPublicFields", () => {
 	it("strips visibleIf and round-trips through JSON", () => {
 		const pub = toPublicFields(sample.memberFields);
