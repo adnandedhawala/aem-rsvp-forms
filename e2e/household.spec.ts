@@ -3,12 +3,12 @@ import { expect, test } from "@playwright/test";
 test("household signs in, answers, and edits", async ({ page }) => {
 	await page.goto("/r/sample-rsvp");
 
-	await page.getByLabel("HOF or member ITS").fill("20000001");
+	await page.getByLabel("ITS ID").fill("20000001");
 	await page.getByLabel("File No").fill("101");
 	await page.getByRole("button", { name: "Continue" }).click();
 	await expect(page.getByText("File number and ITS don't match")).toBeVisible();
 
-	await page.getByLabel("HOF or member ITS").fill("10000002");
+	await page.getByLabel("ITS ID").fill("10000002");
 	await page.getByRole("button", { name: "Continue" }).click();
 	await expect(page).toHaveURL(/\/r\/sample-rsvp\/form$/);
 	for (const id of ["card-household", "card-10000001", "card-10000002"]) {

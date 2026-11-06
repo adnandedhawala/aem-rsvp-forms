@@ -3,7 +3,7 @@
 import { useMutation, useQuery } from "@tanstack/react-query";
 import { Alert, Button, Form, Input } from "antd";
 import { useRouter } from "next/navigation";
-import { Logo } from "@/components/Logo";
+import { bigButtonStyle, IntroCard, PublicPage } from "@/components/PublicPage";
 import { ApiError, api } from "@/lib/api";
 import { formatDate } from "@/lib/format";
 
@@ -27,7 +27,7 @@ function showsCloseDate(closesAt: string): boolean {
 const ITS_LABEL = {
 	hof: "HOF ITS",
 	member: "Your ITS",
-	either: "HOF or member ITS",
+	either: "ITS ID",
 };
 
 export function SignInClient({ slug }: { slug: string }) {
@@ -42,39 +42,34 @@ export function SignInClient({ slug }: { slug: string }) {
 		onSuccess: () => router.push(`/r/${slug}/form`),
 	});
 
-	let body: React.ReactNode;
-	if (info.isPending) {
-		body = <p className="text-zinc-600">Loading…</p>;
-	} else if (info.error) {
-		const notFound =
-			info.error instanceof ApiError && info.error.status === 404;
-		body = (
-			<Alert
-				type="error"
-				message={notFound ? "RSVP not found" : info.error.message}
-			/>
-		);
-	} else {
-		const d = info.data;
-		body = (
-			<>
-				<h1 className="text-xl font-semibold">{d.title}</h1>
-				{d.description && (
-					<p className="whitespace-pre-line text-zinc-600">{d.description}</p>
+	const d = info.data;
+	return (
+		<PublicPage>
+			<IntroCard title={d?.title} description={d?.description}>
+				{info.isPending && <p className="m-0 text-slate-600">Loading…</p>}
+				{info.error && (
+					<Alert
+						type="error"
+						message={
+							info.error instanceof ApiError && info.error.status === 404
+								? "RSVP not found"
+								: info.error.message
+						}
+					/>
 				)}
-				{d.status === "upcoming" && (
+				{d?.status === "upcoming" && (
 					<Alert
 						type="info"
 						message={`Not open yet. Opens ${formatDate(d.opensAt)}`}
 					/>
 				)}
-				{d.status === "closed" && (
+				{d?.status === "closed" && (
 					<Alert type="warning" message="This RSVP is closed" />
 				)}
-				{d.status === "open" && (
+				{d?.status === "open" && (
 					<>
 						{showsCloseDate(d.closesAt) && (
-							<p className="text-sm text-zinc-500">
+							<p className="m-0 mb-3 text-sm text-slate-500">
 								Closes {formatDate(d.closesAt)}
 							</p>
 						)}
@@ -110,22 +105,14 @@ export function SignInClient({ slug }: { slug: string }) {
 								size="large"
 								block
 								loading={signIn.isPending}
+								style={bigButtonStyle}
 							>
 								Continue
 							</Button>
 						</Form>
 					</>
 				)}
-			</>
-		);
-	}
-
-	return (
-		<main className="mx-auto flex w-full max-w-md flex-col gap-4 px-4 py-8">
-			<div className="flex justify-center">
-				<Logo />
-			</div>
-			{body}
-		</main>
+			</IntroCard>
+		</PublicPage>
 	);
 }

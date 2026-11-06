@@ -77,7 +77,7 @@ export function AdminHouseholdClient({
 					/>
 				)}
 				{v && !isAdmin && form && (
-					<>
+					<div className="flex flex-col gap-3">
 						{v.household && form.householdFields.length > 0 && (
 							<AnswerSummary
 								title="Household"
@@ -93,7 +93,7 @@ export function AdminHouseholdClient({
 								data={m.data}
 							/>
 						))}
-					</>
+					</div>
 				)}
 				{v && isAdmin && (
 					<HouseholdForm

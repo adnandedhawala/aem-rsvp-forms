@@ -180,7 +180,7 @@ export default defineForm({
   - `name` must be unique within a form, and `defineForm` fails the build if it isn't. **[my call]**
   - Renaming a `name` after people have answered orphans their old answers, so the rule is: don't rename once a form is live. **[my call]**
 - **`householdFields`** are optional questions asked once per file. **`memberFields`** are asked once per invited member. Both use the same field format and the same "name is the key" rule. **[you: the form defines the questions; the split into household and member fields is my call]**
-- **`signIn`** is set per form **[you]**. The option names and defaults (`its: "either"`, `mustBeInvited: false`) are **[my call]**. The sign-in page label follows the setting: "HOF ITS", "Your ITS" or "HOF or member ITS".
+- **`signIn`** is set per form **[you]**. The option names and defaults (`its: "either"`, `mustBeInvited: false`) are **[my call]**. The sign-in page label follows the setting: "HOF ITS", "Your ITS" or "ITS ID".
 - **Field types** to start with: text, textarea, number, radio, select, multi-select, checkbox, date.
 - `defineForm` builds a Zod schema from the fields. The UI uses it for inline errors and the API re-checks every save. Unknown keys are dropped, so only fields the form defines are ever stored.
 - Adding a form means adding the file and one line in `forms/index.ts`.

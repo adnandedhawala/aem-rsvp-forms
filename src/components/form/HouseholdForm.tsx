@@ -4,6 +4,7 @@ import { type Answers, validateAnswers } from "@forms/_fields";
 import { getForm } from "@forms/index";
 import { Button, Tag } from "antd";
 import { useState } from "react";
+import { bigButtonStyle } from "@/components/PublicPage";
 import type {
 	HouseholdPayload,
 	HouseholdView,
@@ -119,7 +120,7 @@ export function HouseholdForm(props: {
 				loading={submitting}
 				onClick={handleSubmit}
 				className="mt-2"
-				style={{ height: 52, borderRadius: 12, fontWeight: 600 }}
+				style={bigButtonStyle}
 			>
 				Submit
 			</Button>
