@@ -12,7 +12,7 @@ const noStore = [
 ];
 
 const nextConfig: NextConfig = {
-	experimental: { staleTimes: { dynamic: 0, static: 0 } },
+	experimental: { staleTimes: { dynamic: 0, static: 30 } },
 	async headers() {
 		return [{ source: "/:path*", headers: noStore }];
 	},

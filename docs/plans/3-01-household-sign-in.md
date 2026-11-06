@@ -1,6 +1,6 @@
 # 3-01 Household sign-in
 
-Status: Planned · 6 Nov 2026
+Status: Built · 6 Nov 2026
 Kind: new · Spec: 5 step 1, 3 (`signIn`) · Depends on: 1-01, 2-01
 
 ## Decide
