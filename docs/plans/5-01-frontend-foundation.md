@@ -1,6 +1,6 @@
 # 5-01 Frontend foundation
 
-Status: Planned · 6 Nov 2026
+Status: Built · 6 Nov 2026
 Kind: new · Spec: 2 (UI), 2a (client rows), 2b (banner) · Depends on: 0-04, 1-01
 
 ## Decide

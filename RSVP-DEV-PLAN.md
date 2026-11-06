@@ -114,7 +114,7 @@ Each row is one plan in `docs/plans/`. Sizes are relative (S, M, L), not time es
 
 | # | Plan | Size | What it gives | Status |
 |---|---|---|---|---|
-| 5-01 | `frontend-foundation` | S | `api()` client, `makeQueryClient`, Providers, DEV DATA banner, home page | Planned |
+| 5-01 | `frontend-foundation` | S | `api()` client, `makeQueryClient`, Providers, DEV DATA banner, home page | Built |
 | 5-02 | `form-renderer` | M | `FieldInput`, `AnswerCard`, `HouseholdForm` | Planned |
 | 5-03 | `household-pages` | M | `/r/[slug]` sign-in, `/form`, `/done` | Planned |
 
