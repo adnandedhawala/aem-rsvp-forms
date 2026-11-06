@@ -1,6 +1,6 @@
 # 0-02 Env and database guard rails
 
-Status: Planned · 6 Nov 2026
+Status: Built · 6 Nov 2026
 Kind: new · Spec: 2b, 6 (database) · Depends on: 0-01
 
 ## Decide
