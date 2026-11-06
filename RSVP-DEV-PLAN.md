@@ -81,7 +81,7 @@ Each row is one plan in `docs/plans/`. Sizes are relative (S, M, L), not time es
 |---|---|---|---|---|
 | 0-01 | `scaffold` | S | Next.js 16 app, deps, Vitest, Biome, `.env.example` | Built |
 | 0-02 | `env-db-guard` | S | `getServerEnv`, `assertDbAllowed`, `connectDb` | Built |
-| 0-03 | `models` | M | Copied AEM models, `RsvpEntry`, test DB helper + `seedBasic`, `db:indexes` script | Planned |
+| 0-03 | `models` | M | Copied AEM models, `RsvpEntry`, test DB helper + `seedBasic`, `db:indexes` script | Built |
 | 0-04 | `no-cache-http` | S | `json`, `HttpError`, `withRoute`, `proxy.ts` headers, `next.config` / layout no-cache settings | Planned |
 
 ### Phase 1. Forms

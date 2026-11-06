@@ -8,7 +8,7 @@
 		"start": "next start",
 		"test": "vitest run",
 		"lint": "biome check .",
-		"db:indexes": "tsx scripts/db-indexes.ts",
+		"db:indexes": "tsx --conditions=react-server scripts/db-indexes.ts",
 		"e2e": "tsx scripts/e2e.ts"
 	},
 	"dependencies": {

@@ -1,6 +1,6 @@
 # 0-03 Models, test database, index script
 
-Status: Planned · 6 Nov 2026
+Status: Built · 6 Nov 2026
 Kind: new · Spec: 6 (data model) · Depends on: 0-02
 
 ## Decide
