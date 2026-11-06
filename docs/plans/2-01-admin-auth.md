@@ -1,6 +1,6 @@
 # 2-01 Admin sign-in, tokens, sessions, rate limiter
 
-Status: Planned · 6 Nov 2026
+Status: Built · 6 Nov 2026
 Kind: new · Spec: 4.1, 5 step 1 (token), 10 (limit) · Depends on: 0-03, 0-04
 
 ## Decide

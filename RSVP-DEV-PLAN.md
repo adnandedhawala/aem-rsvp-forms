@@ -94,7 +94,7 @@ Each row is one plan in `docs/plans/`. Sizes are relative (S, M, L), not time es
 
 | # | Plan | Size | What it gives | Status |
 |---|---|---|---|---|
-| 2-01 | `admin-auth` | M | Admin and household tokens, `requireAdmin` / `requireHousehold`, login/logout/verify routes, `/admin` guard in proxy, rate limiter | Planned |
+| 2-01 | `admin-auth` | M | Admin and household tokens, `requireAdmin` / `requireHousehold`, login/logout/verify routes, `/admin` guard in proxy, rate limiter | Built |
 
 ### Phase 3. Household API
 
