@@ -5,7 +5,7 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import type { ColDef, GridApi, GridReadyEvent } from "ag-grid-community";
 import { App, Button, Input, Space, Upload } from "antd";
 import dayjs from "dayjs";
-import { useCallback, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import { AdminShell } from "@/components/admin/AdminShell";
 import { DataGrid } from "@/components/admin/DataGrid";
 import { ApiError, api } from "@/lib/api";
@@ -26,7 +26,13 @@ const blank = (): GridRow => ({ id: crypto.randomUUID(), fileNo: "", its: "" });
 const blanks = (n: number) => Array.from({ length: n }, blank);
 
 function statusOf(row: GridRow): string {
-	if (!row.check) return "";
+	if (!row.check) {
+		const fileNo = row.fileNo.trim();
+		const its = row.its.trim();
+		if (fileNo && !its) return "Enter ITS";
+		if (its && !fileNo) return "Enter file no";
+		return fileNo ? "Checking…" : "";
+	}
 	if (!row.check.ok) return row.check.error ?? "Error";
 	return row.check.alreadyInvited ? "Already invited" : "OK";
 }
@@ -54,7 +60,12 @@ export function InviteesClient({ slug }: { slug: string }) {
 	const checked = filled.length > 0 && filled.every((r) => r.check);
 	const canSave = checked && !hasErrors;
 
+	// Set when a check request fails, so auto-check doesn't retry in a loop;
+	// the next edit turns it back on.
+	const [autoPaused, setAutoPaused] = useState(false);
+
 	const edit = useCallback((id: string, patch: Partial<GridRow>) => {
+		setAutoPaused(false);
 		setRows((rs) =>
 			rs.map((r) => (r.id === id ? { ...r, ...patch, check: undefined } : r)),
 		);
@@ -88,8 +99,24 @@ export function InviteesClient({ slug }: { slug: string }) {
 				}),
 			);
 		},
-		onError: (e) => message.error(e.message),
+		onError: (e) => {
+			setAutoPaused(true);
+			message.error(e.message);
+		},
 	});
+
+	// Look up rows as soon as both file no and ITS are entered, so names fill
+	// in and Save turns on without pressing "Check rows".
+	const { mutate: runCheck, isPending: checking } = check;
+	useEffect(() => {
+		if (checking || autoPaused) return;
+		const ready = rows.filter(
+			(r) => r.fileNo.trim() && r.its.trim() && !r.check,
+		);
+		if (ready.length === 0) return;
+		const t = setTimeout(() => runCheck(ready), 300);
+		return () => clearTimeout(t);
+	}, [rows, checking, autoPaused, runCheck]);
 
 	const save = useMutation({
 		mutationFn: () =>
@@ -183,8 +210,9 @@ export function InviteesClient({ slug }: { slug: string }) {
 	const upload = async (file: File) => {
 		try {
 			const parsed = parseInviteeSheet(await file.arrayBuffer());
+			setAutoPaused(false);
 			setRows([...parsed.map((r) => ({ ...blank(), ...r })), ...blanks(20)]);
-			message.success(`Loaded ${parsed.length} rows. Now check them.`);
+			message.success(`Loaded ${parsed.length} rows`);
 		} catch (e) {
 			message.error(e instanceof Error ? e.message : "Could not read the file");
 		}
@@ -249,6 +277,7 @@ export function InviteesClient({ slug }: { slug: string }) {
 						getRowId={(p) => p.data.id}
 						cellSelection
 						singleClickEdit
+						stopEditingWhenCellsLoseFocus
 						rowClassRules={{
 							"bg-red-50": (p) => !!p.data?.check && !p.data.check.ok,
 						}}

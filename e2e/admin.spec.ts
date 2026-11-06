@@ -44,9 +44,11 @@ test("admin flow", async ({ page }) => {
 	await page.keyboard.press("Enter");
 	await cell(1).click();
 	await page.keyboard.type("10000003");
-	await page.keyboard.press("Enter");
-	await page.getByRole("button", { name: "Check rows" }).click();
+	// Click away without Enter: the value must still commit, and the row is
+	// looked up on its own (no "Check rows" click)
+	await page.getByRole("heading", { name: "Add invitees" }).click();
 	await expect(cell(6)).toHaveText("OK");
+	await expect(cell(2)).not.toHaveText("");
 	await page.getByRole("button", { name: "Save" }).click();
 	await expect(page.getByText(/Added 1/)).toBeVisible();
 });
