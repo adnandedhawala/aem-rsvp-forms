@@ -79,16 +79,16 @@ export function SignInClient({ slug }: { slug: string }) {
 							requiredMark={false}
 						>
 							<Form.Item
-								label="File No"
-								name="fileNo"
-								rules={[{ required: true, message: "Enter your file number" }]}
+								label={ITS_LABEL[d.signInIts]}
+								name="its"
+								rules={[{ required: true, message: "Enter the ITS number" }]}
 							>
 								<Input inputMode="numeric" size="large" autoComplete="off" />
 							</Form.Item>
 							<Form.Item
-								label={ITS_LABEL[d.signInIts]}
-								name="its"
-								rules={[{ required: true, message: "Enter the ITS number" }]}
+								label="File No"
+								name="fileNo"
+								rules={[{ required: true, message: "Enter your file number" }]}
 							>
 								<Input inputMode="numeric" size="large" autoComplete="off" />
 							</Form.Item>
