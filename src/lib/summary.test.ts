@@ -10,11 +10,11 @@ const row = (
 	answers: Record<string, unknown>,
 ): ResponseRow => ({
 	fileNo: 101,
-	hofName: "",
 	sector: null,
 	subsector: null,
 	its: "1",
 	full_name: "x",
+	mobile: null,
 	gender,
 	status,
 	answers,

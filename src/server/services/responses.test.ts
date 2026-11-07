@@ -7,6 +7,7 @@ import {
 	startTestDb,
 	stopTestDb,
 } from "../../../tests/helpers/db";
+import { Member } from "../models";
 import { saveHousehold } from "./households";
 import { removeInvitees } from "./invitees";
 import { getFormStats, listResponses } from "./responses";
@@ -60,6 +61,12 @@ describe("listResponses", () => {
 			answers: {},
 			household: {},
 		});
+	});
+	it("shows each member's own mobile, not the HOF's", async () => {
+		await Member.updateOne({ _id: "10000002" }, { mobile: "+919800000002" });
+		const rows = await listResponses(form);
+		expect(rows.map((r) => r.mobile)).toEqual([null, "+919800000002", null]);
+		expect(rows[0]).not.toHaveProperty("hofName");
 	});
 	it("hides removed invitees", async () => {
 		await removeInvitees("sample-rsvp", ["20000001"]);

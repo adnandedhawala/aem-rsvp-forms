@@ -6,7 +6,7 @@ import { getAdminClose } from "./control";
 
 export interface ResponseRow {
 	fileNo: number;
-	hofName: string;
+	mobile: string | null;
 	sector: string | null;
 	subsector: string | null;
 	its: string;
@@ -66,11 +66,11 @@ export async function listResponses(form: FormDef): Promise<ResponseRow[]> {
 			const answered = hasData(e.data);
 			const row: ResponseRow = {
 				fileNo: e.tanzeem_file_no,
-				hofName: file?.hof_name ?? "",
 				sector: file?.sub_sector?.sector?.name ?? null,
 				subsector: file?.sub_sector?.name ?? null,
 				its,
 				full_name: member?.full_name ?? its,
+				mobile: member?.mobile?.trim() || null,
 				age: member?.age,
 				gender: member?.gender,
 				status: answered ? "Answered" : "Pending",
